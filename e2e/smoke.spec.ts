@@ -51,7 +51,7 @@ test('P0 journey on a phone', async ({ page }) => {
   await expect(page.getByText(/open gigs?/)).toBeVisible()
   await shot(page, '04-discover')
   await page.goto(gigUrl)
-  await expect(page.getByText('You earn')).toBeVisible()
+  await expect(page.getByText('You receive')).toBeVisible()
   await page.getByLabel(/Message to/).fill('I live nearby and fix gates often.')
   await page.getByRole('button', { name: 'Apply for this gig' }).click()
   await expect(page.getByText(/You applied/)).toBeVisible()
