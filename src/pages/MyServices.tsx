@@ -59,7 +59,7 @@ export default function MyServices() {
     <div>
       <PageHeader
         title="Your services"
-        subtitle="Set the amount you want to receive. Clients see one price with VAT and SideGigs’ 8% fee included, and can book you directly."
+        subtitle="You set the amount you want to receive. Clients see one price that covers SideGigs’ 8% fee, and can book you directly. No VAT is taken from your pay."
         action={<ButtonLink to="/services/new"><Plus className="size-4" aria-hidden /> Offer a service</ButtonLink>}
       />
       {q.isPending ? (

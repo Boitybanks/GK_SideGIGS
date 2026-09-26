@@ -25,11 +25,11 @@ describe('gig validation', () => {
 })
 
 describe('service and booking validation', () => {
-  const service = { title: 'Paint one interior room', category: 'painting', description: 'Two coats, I bring rollers and drop sheets.', area_slug: 'soweto', take_home_cents: 40_000 }
-  it('prices a service by what the provider receives: R40 to R40 000', () => {
+  const service = { title: 'Paint one interior room', category: 'painting', description: 'Two coats, I bring rollers and drop sheets.', area_slug: 'soweto', take_home_cents: 46_000 }
+  it('prices a service by what the provider receives: R46 to R46 000', () => {
     expect(serviceSchema.safeParse(service).success).toBe(true)
-    expect(serviceSchema.safeParse({ ...service, take_home_cents: 3_999 }).success).toBe(false)
-    expect(serviceSchema.safeParse({ ...service, take_home_cents: 4_000_001 }).success).toBe(false)
+    expect(serviceSchema.safeParse({ ...service, take_home_cents: 4_599 }).success).toBe(false)
+    expect(serviceSchema.safeParse({ ...service, take_home_cents: 4_600_001 }).success).toBe(false)
   })
   it('books a date, area and time without re-describing the job', () => {
     const booking = { area_slug: 'soweto', scheduled_date: addDays(today, 1), time_window: 'flexible' }

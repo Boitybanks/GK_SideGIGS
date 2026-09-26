@@ -49,7 +49,6 @@ export interface Gig {
   scheduled_date: string
   time_window: TimeWindow
   payout_cents: number
-  vat_cents: number
   fee_cents: number
   total_cents: number
   worker_net_cents: number
@@ -136,7 +135,6 @@ export interface Transaction {
   id: string
   gig_id: string
   payout_cents: number
-  vat_cents: number
   fee_cents: number
   total_cents: number
   status: TxnStatus

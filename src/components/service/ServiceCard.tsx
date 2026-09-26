@@ -8,7 +8,7 @@ import type { DiscoverService } from '../../lib/types'
 import { CategoryIcon } from '../CategoryIcon'
 import { Avatar, DemoBadge } from '../ui'
 
-/** Client-facing: the headline number is what the client pays, VAT and the SideGigs fee included. */
+/** Client-facing: the headline number is what the client pays, with nothing added on top. */
 export function ServiceCard({ service, showProvider = true }: { service: DiscoverService; showProvider?: boolean }) {
   return (
     <Link
@@ -27,7 +27,7 @@ export function ServiceCard({ service, showProvider = true }: { service: Discove
         </div>
         <div className="shrink-0 text-right">
           <p className="text-lg font-extrabold text-brand-700">{formatRand(service.price_cents)}</p>
-          <p className="text-[11px] font-medium text-muted">you pay, incl. VAT</p>
+          <p className="text-[11px] font-medium text-muted">you pay</p>
         </div>
       </div>
       <p className="line-clamp-2 text-sm text-ink-soft">{service.description}</p>

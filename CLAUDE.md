@@ -16,11 +16,13 @@ Netlify hosting + Functions (`netlify/functions`, site `sidegigs-codecraft`).
 ## Rules that matter
 - Trust-bearing writes (gigs status, applications, reviews, portfolio, transactions, events) go ONLY through
   `security definer` RPCs in `supabase/migrations/*_rpc_functions.sql`. Never add direct table write grants for them.
-- Pricing: every job price includes 15% VAT (`gigs.vat_cents` = price × 15/115); SideGigs' 8% fee is on the ex-VAT amount
-  (`fee_cents`); the client pays the price (`total_cents` = `payout_cents`), the provider receives `worker_net_cents`
-  (price − VAT − fee = 80%). All generated columns; `src/lib/money.ts` only mirrors them. Each side sees its own number:
-  clients what they pay, providers what they receive. Clients type the price when posting a gig; providers type their
-  take-home when listing a service (`services.take_home_cents` → generated `price_cents`).
+- Pricing: the client pays the job price, nothing added (`total_cents` = `payout_cents`). SideGigs' 8% fee (`fee_cents`)
+  is the only deduction from the provider's pay; the provider receives `worker_net_cents` (92%). **No VAT is withheld**
+  from providers (independent, mostly non-VAT-registered). All generated columns; `src/lib/money.ts` only mirrors them.
+  Each side sees its own number: clients what they pay, providers what they receive. Clients type the price when posting
+  a gig; providers type their take-home when listing a service (`services.take_home_cents` → generated `price_cents`).
+- Providers are independent contractors: they set their own prices, choose or decline work and use their own tools.
+  Don't add features that control their hours or prices (that points to employment, LRA s200A).
 - Portfolio records are created only by `confirm_completion`. "Verified" means customer-confirmed, never ID-verified.
 - Addresses/phones are X-Wing (ML-KEM-768+X25519) → AES-256-GCM envelopes encrypted in the browser; decrypted only in
   `netlify/functions/reveal-contact.mts` using the caller's JWT so RLS decides access. No service-role key anywhere.

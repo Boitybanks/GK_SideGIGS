@@ -14,7 +14,7 @@ import { FeeBreakdown } from '../components/gig/FeeBreakdown'
 import { useToast } from '../components/ui/toast'
 import NotFound from './NotFound'
 
-/** /services/new and /services/:id/edit. The provider types what they take home; clients see the VAT-inclusive price. */
+/** /services/new and /services/:id/edit. The provider types what they take home; clients see the price that pays it. */
 export default function PostService() {
   const { id } = useParams()
   const { userId } = useAuth()
@@ -106,15 +106,15 @@ function ServiceForm({ existing }: { existing?: Service }) {
 
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">2. Set your price</h2>
-          <Field label="What do you want to receive?" htmlFor="take-home" error={errors.take_home_cents} hint="Between R40 and R40 000 — the amount that reaches you. Clients are shown this plus 15% VAT and SideGigs’ 8% fee.">
+          <Field label="What do you want to receive?" htmlFor="take-home" error={errors.take_home_cents} hint="Between R46 and R46 000 — the amount that reaches you. Clients are shown the price that pays you this after SideGigs’ 8% fee. No VAT is taken.">
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center font-bold text-muted">R</span>
-              <input id="take-home" type="number" inputMode="decimal" min={40} max={40000} step={0.01} className="input pl-8 text-lg font-bold"
-                placeholder="400" value={form.take_home_rands} onChange={(e) => set('take_home_rands', e.target.value)} {...invalid('take_home_cents')} />
+              <input id="take-home" type="number" inputMode="decimal" min={46} max={46000} step={0.01} className="input pl-8 text-lg font-bold"
+                placeholder="460" value={form.take_home_rands} onChange={(e) => set('take_home_rands', e.target.value)} {...invalid('take_home_cents')} />
             </div>
           </Field>
           <div className="flex flex-wrap gap-2">
-            {[160, 280, 400, 640, 1200].map((r) => (
+            {[150, 250, 400, 600, 1000].map((r) => (
               <button key={r} type="button" className="chip" aria-pressed={form.take_home_rands === String(r)} onClick={() => set('take_home_rands', String(r))}>
                 R{r}
               </button>
@@ -124,7 +124,7 @@ function ServiceForm({ existing }: { existing?: Service }) {
         </Card>
 
         {formError && <p role="alert" className="rounded-lg bg-clay-50 px-3 py-2 text-sm font-medium text-clay-700">{formError}</p>}
-        <p className="text-sm text-muted">When a client books, the job appears in My work with their date. You can decline a booking before you start. Keep phone numbers out of the description.</p>
+        <p className="text-sm text-muted">You set your own price and choose your work. When a client books, the job appears in My work with their date, and you can decline before you start. Keep phone numbers out of the description.</p>
         <Button type="submit" size="lg" block loading={busy}>{existing ? 'Save changes' : 'Publish service'}</Button>
       </form>
     </div>

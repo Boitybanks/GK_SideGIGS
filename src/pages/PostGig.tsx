@@ -127,7 +127,7 @@ export default function PostGig() {
 
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">3. Set a clear budget</h2>
-          <Field label="What will you pay for this job?" htmlFor="payout" error={errors.payout_cents} hint="Between R50 and R50 000, including VAT. Service providers are shown what they’ll receive after 15% VAT and SideGigs’ 8% fee.">
+          <Field label="What will you pay for this job?" htmlFor="payout" error={errors.payout_cents} hint="Between R50 and R50 000. Nothing is added on top. Service providers are shown what they’ll receive after SideGigs’ 8% fee.">
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center font-bold text-muted">R</span>
               <input id="payout" type="number" inputMode="decimal" min={50} max={50000} step={0.01} className="input pl-8 text-lg font-bold"

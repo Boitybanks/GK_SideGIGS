@@ -1,93 +1,52 @@
--- 1) Pricing: every job price is VAT-inclusive (SA prices are quoted with VAT). From it the database derives
---      vat_cents         15% VAT inside the price: price × 15/115, rounded half-up to the cent
---      fee_cents         SideGigs' 8% fee on the price excluding VAT, rounded half-up to the cent
---      worker_net_cents  what the service provider receives: price − VAT − fee (80% of the price, to the cent)
---      total_cents       what the client pays: the price
---    R500 job → VAT R65.22, fee R34.78, provider receives R400. Same formulas as src/lib/money.ts.
+-- 1) Pricing: SideGigs' fee drops from 15% to 8%, still taken from the service provider's pay. No VAT is withheld:
+--    most providers are informal, non-VAT-registered independent contractors, and VAT is not theirs to account for.
+--      fee_cents         8% of the job price, rounded half-up to the cent (the only deduction)
+--      worker_net_cents  what the service provider receives: price − fee (92%)
+--      total_cents       what the client pays: the price, nothing added
+--    R500 job → fee R40, provider receives R460. Same formulas as src/lib/money.ts.
 -- 2) Services: a provider lists a service at the amount they want to take home. The client is shown the price that
---    pays exactly that after VAT and the fee (R400 take-home → client pays R500). Booking it creates a gig that is
---    matched to the provider straight away, so it runs through the same QR start/finish, confirmation and portfolio.
+--    pays exactly that after the fee (R460 take-home → client pays R500). Booking it creates a gig that is matched to
+--    the provider straight away, so it runs through the same QR start/finish, confirmation and portfolio.
 
 -- ── Pricing ────────────────────────────────────────────────────────────────
-create function private.vat_cents(p_price integer) returns integer
-language sql immutable set search_path = '' as $$
-  select (p_price * 30 + 115) / 230;
-$$;
-
 create function private.sidegigs_fee_cents(p_price integer) returns integer
 language sql immutable set search_path = '' as $$
-  select ((p_price - private.vat_cents(p_price)) * 8 + 50) / 100;
+  select (p_price * 8 + 50) / 100;
 $$;
 
 create function private.take_home_cents(p_price integer) returns integer
 language sql immutable set search_path = '' as $$
-  select p_price - private.vat_cents(p_price) - private.sidegigs_fee_cents(p_price);
+  select p_price - private.sidegigs_fee_cents(p_price);
 $$;
 
 -- The smallest price whose take-home is at least p_take_home. Take-home rises by 0 or 1 cent for every cent of price,
--- so that price pays exactly p_take_home, and it always lies within 3 cents of take-home × 1.25.
+-- so that price pays exactly p_take_home, and it always lies within 3 cents of take-home × 25/23.
 create function private.price_for_take_home(p_take_home integer) returns integer
 language sql immutable set search_path = '' as $$
   select min(p)::integer
-  from generate_series(greatest(p_take_home * 5 / 4 - 3, 0), p_take_home * 5 / 4 + 3) as p
+  from generate_series(greatest(p_take_home * 25 / 23 - 3, 0), p_take_home * 25 / 23 + 3) as p
   where private.take_home_cents(p) >= p_take_home;
 $$;
 
 revoke all on function
-  private.vat_cents(integer), private.sidegigs_fee_cents(integer),
-  private.take_home_cents(integer), private.price_for_take_home(integer)
+  private.sidegigs_fee_cents(integer), private.take_home_cents(integer), private.price_for_take_home(integer)
 from public;
 grant execute on function
-  private.vat_cents(integer), private.sidegigs_fee_cents(integer),
-  private.take_home_cents(integer), private.price_for_take_home(integer)
+  private.sidegigs_fee_cents(integer), private.take_home_cents(integer), private.price_for_take_home(integer)
 to anon, authenticated;
 
-alter table public.gigs add column vat_cents integer generated always as (private.vat_cents(payout_cents)) stored;
 alter table public.gigs alter column fee_cents set expression as (private.sidegigs_fee_cents(payout_cents));
 alter table public.gigs alter column worker_net_cents set expression as (private.take_home_cents(payout_cents));
 
-comment on column public.gigs.payout_cents is 'Job price including VAT: what the client pays.';
-comment on column public.gigs.vat_cents is '15% VAT included in the job price.';
-comment on column public.gigs.fee_cents is 'SideGigs 8% fee on the job price excluding VAT.';
-comment on column public.gigs.total_cents is 'What the client pays: the job price.';
-comment on column public.gigs.worker_net_cents is 'What the service provider receives: job price less VAT and the SideGigs fee.';
+comment on column public.gigs.fee_cents is 'SideGigs 8% fee, deducted from the service provider''s pay. The only deduction.';
+comment on column public.gigs.worker_net_cents is 'What the service provider receives: job price less the SideGigs fee.';
+comment on column public.transactions.fee_cents is 'SideGigs 8% fee, deducted from the service provider''s pay.';
 
-alter table public.transactions add column vat_cents integer not null default 0;
-comment on column public.transactions.vat_cents is 'VAT included in what the client paid.';
-comment on column public.transactions.fee_cents is 'SideGigs 8% fee (excluding VAT).';
-
--- Payments are a labelled simulation, so existing records are restated under the new model for consistency.
+-- Payments are a labelled simulation, so existing records are restated under the new fee for consistency.
+-- select_worker (20260926001000) already records worker_net_cents / fee_cents / total_cents from these columns.
 update public.transactions t
-set payout_cents = g.worker_net_cents, fee_cents = g.fee_cents, vat_cents = g.vat_cents, total_cents = g.total_cents
+set payout_cents = g.worker_net_cents, fee_cents = g.fee_cents, total_cents = g.total_cents
 from public.gigs g where g.id = t.gig_id;
-
-create or replace function public.select_worker(p_gig uuid, p_application uuid) returns void
-language plpgsql security definer set search_path = '' as $$
-declare
-  v_uid uuid := auth.uid();
-  v_gig public.gigs;
-  v_app public.gig_applications;
-  v_name text;
-begin
-  if v_uid is null then raise exception 'Please sign in first.' using errcode = '42501'; end if;
-  select * into v_gig from public.gigs g where g.id = p_gig for update;
-  if not found or v_gig.customer_id <> v_uid then raise exception 'Only the person who posted this gig can choose a worker.' using errcode = '42501'; end if;
-  if v_gig.status <> 'open' then raise exception 'A worker has already been chosen for this gig.' using errcode = '22023'; end if;
-  select * into v_app from public.gig_applications a where a.id = p_application and a.gig_id = p_gig for update;
-  if not found or v_app.status <> 'pending' then raise exception 'This application is no longer available.' using errcode = '22023'; end if;
-
-  update public.gigs g set status = 'matched', assigned_worker_id = v_app.worker_id, matched_at = now() where g.id = p_gig;
-  update public.gig_applications a set status = 'accepted', updated_at = now() where a.id = v_app.id;
-  update public.gig_applications a set status = 'declined', updated_at = now()
-    where a.gig_id = p_gig and a.id <> v_app.id and a.status = 'pending';
-  insert into public.transactions (gig_id, customer_id, worker_id, payout_cents, fee_cents, vat_cents, total_cents)
-  values (p_gig, v_uid, v_app.worker_id, v_gig.worker_net_cents, v_gig.fee_cents, v_gig.vat_cents, v_gig.total_cents);
-
-  select p.display_name into v_name from public.profiles p where p.id = v_app.worker_id;
-  insert into public.gig_events (gig_id, actor_id, kind, detail) values
-    (p_gig, v_uid, 'matched', v_name),
-    (p_gig, v_uid, 'payment_held', null);
-end $$;
 
 -- ── Services ───────────────────────────────────────────────────────────────
 create table public.services (
@@ -101,8 +60,8 @@ create table public.services (
   description text not null check (char_length(btrim(description)) between 20 and 1000),
   area_slug text not null references public.areas (slug),
   -- What the provider typed: the amount they take home. Bounds map to the gig price bounds R50–R50 000.
-  take_home_cents integer not null check (take_home_cents between 4000 and 4000000),
-  -- What the client pays, including VAT and the SideGigs fee.
+  take_home_cents integer not null check (take_home_cents between 4600 and 4600000),
+  -- What the client pays; the SideGigs fee comes out of it before it reaches the provider.
   price_cents integer generated always as (private.price_for_take_home(take_home_cents)) stored,
   is_active boolean not null default true,
   is_demo boolean not null default false,
@@ -139,8 +98,8 @@ begin
   if v_uid is null then raise exception 'Please sign in first.' using errcode = '42501'; end if;
   select p.is_demo into v_demo from public.profiles p where p.id = v_uid;
   if not found then raise exception 'Please complete your profile first.' using errcode = '22023'; end if;
-  if p_take_home_cents is null or p_take_home_cents not between 4000 and 4000000 then
-    raise exception 'What you receive must be between R40 and R40 000.' using errcode = '22023';
+  if p_take_home_cents is null or p_take_home_cents not between 4600 and 4600000 then
+    raise exception 'What you receive must be between R46 and R46 000.' using errcode = '22023';
   end if;
   if not exists (select 1 from public.areas a where a.slug = p_area) then
     raise exception 'Please choose the area you work in.' using errcode = '22023';
@@ -220,8 +179,8 @@ begin
   update public.gigs g set status = 'matched', assigned_worker_id = v_service.worker_id, matched_at = now()
   where g.id = v_id
   returning * into v_gig;
-  insert into public.transactions (gig_id, customer_id, worker_id, payout_cents, fee_cents, vat_cents, total_cents)
-  values (v_id, v_uid, v_service.worker_id, v_gig.worker_net_cents, v_gig.fee_cents, v_gig.vat_cents, v_gig.total_cents);
+  insert into public.transactions (gig_id, customer_id, worker_id, payout_cents, fee_cents, total_cents)
+  values (v_id, v_uid, v_service.worker_id, v_gig.worker_net_cents, v_gig.fee_cents, v_gig.total_cents);
 
   select p.display_name into v_name from public.profiles p where p.id = v_service.worker_id;
   insert into public.gig_events (gig_id, actor_id, kind, detail) values
@@ -297,28 +256,28 @@ grant execute on function
 to authenticated;
 
 -- ── Demo services (badged in the UI) ───────────────────────────────────────
--- Take-home amounts are multiples of R4, so clients see round prices (R400 take-home → R500).
+-- Take-home amounts are chosen so clients see round prices (R460 take-home → R500).
 insert into public.services (worker_id, title, category, description, area_slug, take_home_cents, is_demo)
 select p.id, v.title, v.category, v.description, p.area_slug, v.take_home_cents, true
 from (values
   ('demo.worker@sidegigs.app', 'Paint one interior room', 'painting',
-   'Walls of one bedroom or lounge, two coats. I bring brushes, rollers and drop sheets; you choose and buy the paint.', 120000),
+   'Walls of one bedroom or lounge, two coats. I bring brushes, rollers and drop sheets; you choose and buy the paint.', 138000),
   ('demo.worker@sidegigs.app', 'Fix a door, hinge or cupboard', 'repairs',
-   'Sticking doors, broken hinges, loose cupboard doors and handles. Small parts included; bigger parts quoted first.', 28000),
+   'Sticking doors, broken hinges, loose cupboard doors and handles. Small parts included; bigger parts quoted first.', 32200),
   ('lerato.demo@sidegigs.app', 'Knotless braids, shoulder length', 'hair-beauty',
-   'Neat knotless braids at your home. Braiding hair included in black or brown. Takes about four hours.', 48000),
+   'Neat knotless braids at your home. Braiding hair included in black or brown. Takes about four hours.', 55200),
   ('lerato.demo@sidegigs.app', 'Deep clean a 2-bedroom home', 'cleaning',
-   'Kitchen, bathroom, floors, windows inside and dusting throughout. I bring my own cleaning products.', 40000),
+   'Kitchen, bathroom, floors, windows inside and dusting throughout. I bring my own cleaning products.', 46000),
   ('ayanda.demo@sidegigs.app', 'One-hour maths or science lesson', 'tutoring',
-   'Grade 8–12 maths or physical science. Bring your homework or test and we work through it together.', 16000),
+   'Grade 8–12 maths or physical science. Bring your homework or test and we work through it together.', 18400),
   ('ayanda.demo@sidegigs.app', 'Laptop tune-up and virus clean', 'tech-support',
-   'Speed up a slow Windows laptop: remove viruses and junk, update it and back up your photos and documents.', 24000),
+   'Speed up a slow Windows laptop: remove viruses and junk, update it and back up your photos and documents.', 27600),
   ('kagiso.demo@sidegigs.app', 'Minor car service at your home', 'automotive',
-   'Oil, oil filter and air filter changed at your place, plus a check of brakes, battery and tyres. Parts extra.', 64000),
+   'Oil, oil filter and air filter changed at your place, plus a check of brakes, battery and tyres. Parts extra.', 73600),
   ('nomsa.demo@sidegigs.app', 'Home-cooked meal for 20 guests', 'catering',
-   'Pap, rice, chicken, beef stew and three salads for up to 20 people. Ingredients included, served hot.', 160000),
+   'Pap, rice, chicken, beef stew and three salads for up to 20 people. Ingredients included, served hot.', 184000),
   ('themba.demo@sidegigs.app', 'Garden clean-up, half day', 'gardening',
-   'Mowing, weeding, trimming hedges and taking the garden refuse away in my bakkie. About four hours.', 36000)
+   'Mowing, weeding, trimming hedges and taking the garden refuse away in my bakkie. About four hours.', 41400)
 ) as v (email, title, category, description, take_home_cents)
 join auth.users u on lower(u.email) = v.email
 join public.profiles p on p.id = u.id;

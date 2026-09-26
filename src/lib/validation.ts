@@ -79,7 +79,7 @@ export function gigSchema(today = todayInSA()) {
 }
 export type GigInput = z.infer<ReturnType<typeof gigSchema>>
 
-/** A provider lists a service at the amount they want to receive; clients are shown the price including VAT and the fee. */
+/** A provider lists a service at the amount they want to receive; clients are shown the price that pays that after the fee. */
 export const serviceSchema = z.object({
   title: z.string().trim().min(5, 'Give your service a short title (at least 5 characters).').max(80, 'Keep the title under 80 characters.'),
   category: z.enum(categorySlugs, { message: 'Choose a category.' }),
@@ -92,8 +92,8 @@ export const serviceSchema = z.object({
   take_home_cents: z
     .number({ message: 'Enter what you want to receive for this service.' })
     .int()
-    .min(MIN_TAKE_HOME_CENTS, 'The minimum you can receive is R40.')
-    .max(MAX_TAKE_HOME_CENTS, 'The maximum you can receive is R40 000.'),
+    .min(MIN_TAKE_HOME_CENTS, 'The minimum you can receive is R46.')
+    .max(MAX_TAKE_HOME_CENTS, 'The maximum you can receive is R46 000.'),
 })
 export type ServiceInput = z.infer<typeof serviceSchema>
 

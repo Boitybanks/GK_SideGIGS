@@ -11,7 +11,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { AreaSelect } from '../components/AreaSelect'
 import { ServiceCard } from '../components/service/ServiceCard'
 
-/** Clients browse services that providers have priced. Prices shown are what the client pays, VAT and fee included. */
+/** Clients browse services that providers have priced. Prices shown are what the client pays, nothing added. */
 export default function Services() {
   const { profile, userId } = useAuth()
   const areaOf = useAreaLookup()
@@ -33,7 +33,7 @@ export default function Services() {
     <div>
       <PageHeader
         title="Book a service near you"
-        subtitle="Local people list what they do and what it costs. The price you see includes VAT and the SideGigs fee — nothing is added later."
+        subtitle="Local people list what they do and what it costs. The price you see is the price you pay — nothing is added later."
         action={profile?.role === 'worker' ? <ButtonLink to="/my-services" variant="secondary">List your own service</ButtonLink> : undefined}
       />
 
