@@ -1,5 +1,5 @@
 import { BadgeCheck, EyeOff, Flag, KeyRound, Lock, ShieldCheck, Wallet } from 'lucide-react'
-import { Card, PageHeader } from '../components/ui'
+import { ButtonLink, Card, PageHeader } from '../components/ui'
 
 const sections = [
   {
@@ -54,6 +54,11 @@ export default function Trust() {
           </Card>
         ))}
       </div>
+      <Card className="mt-6 p-5">
+        <h2 className="font-semibold">Optional ID format & selfie demo</h2>
+        <p className="mt-2 text-sm text-muted">This demonstration checks an ID number’s structure and checksum locally and optionally captures a temporary selfie. It does not check official records, identify anyone, match a face or detect liveness. No ID, birth date or photo is uploaded or saved, and no public badge is awarded. Use the sample details; completing this demo is never required to work or hire.</p>
+        <ButtonLink to="/identity-demo" variant="secondary" className="mt-4">Try the identity demo</ButtonLink>
+      </Card>
       <p className="mt-6 text-sm text-muted">
         What we don’t do yet: identity or background checks. No profile on SideGigs is “ID verified” — “verified” always means a record of a
         customer-confirmed gig. Core security still depends on HTTPS, secure authentication, database row-level access rules, protected server

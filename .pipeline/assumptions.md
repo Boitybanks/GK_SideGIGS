@@ -11,7 +11,7 @@
 | A7 | Seeded demo data is flagged `is_demo` and shown with a "Demo" badge; the Impact dashboard reports live (non-demo) figures separately. | "No fabricated user data presented as production data." |
 | A8 | "Quantum encryption" is interpreted as **post-quantum cryptography** (NIST FIPS 203/204), not quantum key distribution (which needs quantum hardware). | Only PQC is implementable in a web app today. See architecture §7. |
 | A9 | Supabase region eu-west-2 (London). | Closest available Supabase region to South Africa in the connector's list. |
-| A10 | Identity verification is **not** implemented; no "ID verified" claims. "Verified record" means *created by SideGigs from a customer-confirmed gig*. | Honest trust labels. |
+| A10 | Real identity verification is **not** implemented; no "ID verified" claims or public identity badges. An optional `/identity-demo` checks ID format/checksum and permits a temporary local selfie; processing is explicitly simulated, nothing is persisted and completing it grants no privileges. "Verified record" means *created by SideGigs from a customer-confirmed gig*. | Honest trust labels; data minimisation; no mandatory demo gate. |
 | A11 | Work-evidence photos: images only (JPEG/PNG/WebP), ≤ 5 MB, stored in a public bucket under the worker's own folder. | Safe file restrictions; portfolio evidence is meant to be public. |
 | A12 | Shared demo logins are protected: credentials immutable, demo profiles read-only, no daily posting cap, local-scope sign-out. | Many judges use the same two accounts at once. |
 | A13 | A verified record requires two-party confirmation: the worker marks the job done, then the customer confirms. | Stronger "verified" meaning; prevents a customer creating records alone. |

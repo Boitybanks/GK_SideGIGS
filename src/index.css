@@ -3,6 +3,8 @@
 /* SideGigs identity: warm, optimistic, South African. Green = growth & trust, gold = opportunity,
    clay = local warmth. Contrast checked against WCAG AA for text use. */
 @theme {
+  --animate-progress-fill: progress-fill 3s linear forwards;
+  @keyframes progress-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
   --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --color-brand-50: #eaf6ef;

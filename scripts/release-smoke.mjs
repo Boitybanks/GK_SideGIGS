@@ -8,13 +8,15 @@ const checks = []
 async function request(path, options) {
   return fetch(base + path, { signal: AbortSignal.timeout(20000), ...options })
 }
-for (const path of ['/', '/welcome', '/discover?category=tutoring', '/login', '/gigs/new', '/trust']) {
+for (const path of ['/', '/welcome', '/discover?category=tutoring', '/login', '/gigs/new', '/trust', '/identity-demo']) {
   const r = await request(path)
   assert.equal(r.status, 200, path)
   const html = await r.text()
   assert.match(html, /DM\+Sans/, 'Approved typography must be deployed')
   assert.match(html, /id="root"/, 'SPA entry point')
   assert.ok(r.headers.get('content-security-policy'))
+  assert.match(r.headers.get('permissions-policy'), /camera=\(self\)/)
+  assert.match(r.headers.get('permissions-policy'), /microphone=\(\)/)
   checks.push({ path, status: r.status })
 }
 for (const name of ['photographer', 'tutor', 'stylist']) {
@@ -32,6 +34,13 @@ const js = await (await request(script)).text()
 assert.match(js, /Your thing/)
 assert.match(js, /Someone’s next find/)
 checks.push({ approvedHeroBundle: true })
+const identityChunk = js.match(/IdentityDemo-[\w-]+\.js/)[0]
+const identityJs = await (await request(`/assets/${identityChunk}`)).text()
+assert.match(identityJs, /demo_completed/)
+assert.match(identityJs, /no biometric analysis/)
+assert.match(identityJs, /selfie skipped/)
+assert.doesNotMatch(identityJs, /SA ID & Face Verified/)
+checks.push({ honestIdentityDemoBundle: true })
 const denied = await request('/api/reveal-contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
 assert.equal(denied.status, 401)
 checks.push({ unauthenticatedContactReveal: denied.status })

@@ -180,6 +180,11 @@ function ProfileForm() {
         </Card>
       )}
 
+      <Card className="mt-6 p-5">
+        <h2 className="font-semibold">Explore the ID format & selfie demo</h2>
+        <p className="mt-2 text-sm text-muted">Optional, device-only and simulated. It does not verify your identity, save your details or add a badge to your profile. Use sample details to try it.</p>
+        <ButtonLink to="/identity-demo" variant="secondary" className="mt-4">Try the identity demo</ButtonLink>
+      </Card>
       <div className="mt-6 flex justify-center">
         <Button variant="ghost" onClick={async () => { await signOut(); navigate('/') }}><LogOut className="size-4" aria-hidden /> Sign out</Button>
       </div>

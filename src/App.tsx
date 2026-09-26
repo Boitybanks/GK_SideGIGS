@@ -21,6 +21,7 @@ const Profile = lazy(() => import('./pages/Profile'))
 const Impact = lazy(() => import('./pages/Impact'))
 const Verify = lazy(() => import('./pages/Verify'))
 const Trust = lazy(() => import('./pages/Trust'))
+const IdentityDemo = lazy(() => import('./pages/IdentityDemo'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 const queryClient = new QueryClient({
@@ -80,6 +81,7 @@ export default function App() {
                   <Route path="impact" element={<Impact />} />
                   <Route path="verify" element={<Verify />} />
                   <Route path="trust" element={<Trust />} />
+                  <Route path="identity-demo" element={<IdentityDemo />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
