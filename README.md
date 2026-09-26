@@ -14,7 +14,7 @@ Built by team **CodeCraft** — Boitumelo, Mthandeki, Musa and Zanele.
 - Workers discover nearby gigs (sorted by distance, filter by skill), apply, get chosen, start and finish the job.
 - The customer confirms completion → a **verified record** is added to the worker’s public portfolio automatically, then the customer’s rating and review attach to it.
 - Workers share their portfolio link or download a **quantum-resistant signed work record** (ML-DSA-65) that anyone can verify at `/verify`.
-- Private addresses and phone numbers are **post-quantum encrypted in the browser** (X-Wing: ML-KEM-768 + X25519 → AES-256-GCM) and revealed only to the matched pair.
+- As an experimental defence-in-depth layer, private addresses and phone numbers are encrypted in the browser with the X-Wing hybrid construction (ML-KEM-768 + X25519 → AES-256-GCM) and revealed only to the matched pair. Core security remains HTTPS, Supabase Auth, RLS, protected server secrets and audit logging; this is not a claim that the database itself is “quantum encrypted”.
 - Live impact dashboard: people who earned, income earned, match rate, time to match, ratings, repeat work.
 
 Payments are a clearly labelled **simulation** in this version.

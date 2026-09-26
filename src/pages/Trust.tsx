@@ -9,8 +9,8 @@ const sections = [
   },
   {
     icon: Lock,
-    title: 'Post-quantum encryption for private details',
-    body: 'Street addresses, access notes and phone numbers are encrypted on your device before they are saved, using X-Wing — ML-KEM-768 (NIST FIPS 203) combined with X25519 — and AES-256-GCM. The database stores only ciphertext, so a leaked database or backup reveals nothing, even to an attacker with a future quantum computer (“harvest now, decrypt later”).',
+    title: 'Experimental post-quantum protection for private details',
+    body: 'Street addresses, access notes and phone numbers are encrypted on your device before they are saved, using the X-Wing hybrid construction (ML-KEM-768 + X25519) and AES-256-GCM. The database stores ciphertext for those fields, reducing what a database-only leak exposes. This is defence-in-depth, not a claim that the database or the whole app is “quantum encrypted”.',
   },
   {
     icon: KeyRound,
@@ -56,7 +56,8 @@ export default function Trust() {
       </div>
       <p className="mt-6 text-sm text-muted">
         What we don’t do yet: identity or background checks. No profile on SideGigs is “ID verified” — “verified” always means a record of a
-        customer-confirmed gig.
+        customer-confirmed gig. Core security still depends on HTTPS, secure authentication, database row-level access rules, protected server
+        secrets and audit logging; the post-quantum feature is an isolated experimental layer.
       </p>
     </div>
   )

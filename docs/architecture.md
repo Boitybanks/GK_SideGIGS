@@ -43,13 +43,15 @@ Lifecycle: `open → matched → in_progress → completed` (`cancelled` from op
 ## 6. Error handling & testing
 TanStack Query surfaces loading/error states; RPCs raise readable exceptions shown as toasts. Tests: Vitest unit tests (fees, distance, validation, lifecycle rules, crypto round-trips) + `npm run test:journey` (full P0 journey against the live database via RPCs) + Playwright smoke on production.
 
-## 7. Security — post-quantum protection of private data
-"Quantum encryption" is implemented as **post-quantum cryptography** (NIST standards), defending against *harvest-now, decrypt-later* attacks on stored personal data:
+## 7. Security — core controls and experimental post-quantum protection
+The core security boundary is standard, reviewed practice: HTTPS in transit, Supabase Auth, least-privilege RLS, narrowly scoped `security definer` RPCs, server-only secrets, input validation and audit events. The database is **not** described as “quantum encrypted”.
+
+As an isolated defence-in-depth experiment, selected private fields also use post-quantum cryptography to reduce *harvest-now, decrypt-later* exposure:
 - **Encryption at the application layer (FIPS 203):** exact gig address/access notes and phone numbers are encrypted **in the browser** before they reach the database using **X-Wing hybrid KEM (ML-KEM-768 + X25519)** → HKDF-SHA-256 → **AES-256-GCM**, with the gig/user id bound as associated data. The database stores only ciphertext envelopes; a database dump, backup leak or compromised DB credential reveals no addresses or phone numbers.
 - **Decryption** happens only in the `reveal-contact` Netlify Function, which holds the 32-byte X-Wing secret key in an environment secret. It reads envelopes **with the caller's own JWT**, so Postgres RLS decides who may decrypt (customer and matched worker only); every reveal is written to the gig timeline.
 - **Signed work records (FIPS 204):** `work-credential` signs a worker's verified history with **ML-DSA-65**; anyone can verify it at `/verify` in the browser with the published public key — a portable, quantum-resistant reference.
 - Baseline: TLS in transit, Supabase AES-256 encryption at rest, RLS, security-definer RPCs, CSP and security headers (`netlify.toml`).
-- Honest limits: this is not quantum key distribution; the KEM secret is a single server key (rotation = re-encrypt with a new `kid`).
+- Honest limits: X-Wing is a hybrid construction built from standardized ML-KEM plus X25519; this implementation has not had an independent cryptographic audit. It is not quantum key distribution, does not encrypt public marketplace data or the database as a whole, and the KEM secret is a single server key (rotation requires re-encryption under a new `kid`).
 
 ## 8. Deployment & configuration
 Netlify: `npm run build` → `dist/`, functions in `netlify/functions`, SPA redirect, security headers. Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (public), `PQ_KEM_SECRET_SEED`, `PQ_SIGN_SEED` (secrets, functions only). Public keys are committed in `src/lib/pq-public-keys.ts`.

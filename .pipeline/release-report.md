@@ -14,7 +14,9 @@
 | AUTH | Email + password; instant sign-up via validated `create_account` (no email-confirmation wait); demo logins protected (credentials immutable, profiles read-only) |
 | NETLIFY | Site `sidegigs-codecraft`; SPA redirect, CSP/HSTS/X-Frame headers; functions `/api/reveal-contact`, `/api/work-credential` live; PQ seeds as secret env vars |
 
-**Post-quantum security (team requirement):** addresses and phone numbers are encrypted in the browser with X-Wing (ML-KEM-768 + X25519) → AES-256-GCM; the DB stores ciphertext only; decryption happens server-side with the caller's JWT so RLS decides who can see it. Work histories are signed with ML-DSA-65 and verifiable by anyone.
+Revalidated on 26 September 2026: typecheck and lint pass; all 27 unit tests pass; a clean production build completes; and the public customer/worker journey passed through post → apply → select → private-address reveal → start → worker done → customer confirm → review → verified portfolio record, with no browser console warnings or errors.
+
+**Security:** HTTPS, Supabase Auth, RLS, protected server secrets and audit events are the core controls. As an isolated experimental defence-in-depth layer, address and phone fields are encrypted in the browser with the X-Wing hybrid construction (ML-KEM-768 + X25519) → AES-256-GCM; only ciphertext for those fields is stored, and server-side reveal uses the caller's JWT so RLS decides access. Work-history exports use ML-DSA-65 signatures. The database is not claimed to be “quantum encrypted”, and this implementation has not had an independent cryptographic audit.
 
 ## Known limitations (real)
 - Payments are a labelled **simulation** — no PSP/escrow integration.
