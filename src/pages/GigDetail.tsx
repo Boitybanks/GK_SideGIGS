@@ -59,7 +59,7 @@ function ConfirmAction({ label, confirmText, variant = 'primary', icon, onConfir
         >
           Yes, {label.toLowerCase()}
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => setAsking(false)}>Go back</Button>
+        <Button variant="ghost" size="sm" disabled={busy} onClick={() => setAsking(false)}>Go back</Button>
       </div>
     </div>
   )
@@ -80,7 +80,7 @@ export default function GigDetail() {
     refetchInterval: (q) => {
       const g = q.state.data
       if (!g || !userId || g.status === 'completed' || g.status === 'cancelled') return false
-      return g.customer_id === userId || g.assigned_worker_id === userId ? 8000 : false
+      return g.status === 'open' || g.customer_id === userId || g.assigned_worker_id === userId ? 8000 : false
     },
   })
   const gig = gigQ.data
@@ -97,6 +97,7 @@ export default function GigDetail() {
     queryKey: ['my-application', id, userId],
     queryFn: () => api.fetchMyApplication(id, userId!),
     enabled: Boolean(userId) && viewer === 'other_worker',
+    refetchInterval: gig?.status === 'open' ? 8000 : false,
   })
   const eventsQ = useQuery({
     queryKey: ['events', id, gig?.status, gig?.worker_done_at],
@@ -205,18 +206,20 @@ export default function GigDetail() {
 
       <Card className="mt-4 space-y-4 p-5">
         <LifecycleStepper status={gig.status} />
-        <p className="rounded-xl bg-canvas px-4 py-3 font-semibold" aria-live="polite">{nextStepText(gig, viewer)}</p>
+        <p className="rounded-xl bg-canvas px-4 py-3 font-semibold" aria-live="polite">{viewer === 'other_worker' && myApp?.status === 'pending' && gig.status === 'open' ? 'Application sent. The customer will review your profile and choose a worker. Track this gig in My work.' : nextStepText(gig, viewer)}</p>
 
         {/* ── Guest ── */}
         {viewer === 'guest' && gig.status === 'open' && (
           <div className="flex flex-col gap-2 sm:flex-row">
-            <ButtonLink to={`/signup?role=worker`} size="lg">Join free to apply</ButtonLink>
+            <ButtonLink to={`/signup?role=worker&next=${encodeURIComponent(`/gigs/${gig.id}`)}`} size="lg">Join free to apply</ButtonLink>
             <ButtonLink to={`/login?next=/gigs/${gig.id}`} variant="secondary" size="lg">I have an account</ButtonLink>
           </div>
         )}
 
         {/* ── Worker who is not (yet) assigned ── */}
-        {actions.includes('apply') && viewer === 'other_worker' && (
+        {viewer === 'other_worker' && myAppQ.isPending && <Spinner label="Checking your application…" />}
+        {viewer === 'other_worker' && myAppQ.isError && <ErrorState error={myAppQ.error} onRetry={() => myAppQ.refetch()} />}
+        {actions.includes('apply') && viewer === 'other_worker' && myAppQ.isSuccess && (
           <form
             className="space-y-3"
             onSubmit={async (e) => {
@@ -231,13 +234,14 @@ export default function GigDetail() {
             </label>
             <textarea id="apply-message" rows={3} maxLength={300} className="input" placeholder="e.g. I live nearby and did a similar job last month." value={message} onChange={(e) => setMessage(e.target.value)} />
             <Button type="submit" size="lg" block loading={applyBusy}>Apply for this gig</Button>
-            <p className="text-xs text-muted">The customer will see your skills, verified gigs and reviews.</p>
+            <p className="text-sm text-muted">Applying is free. Check that the date, area and payout work for you. The customer reviews your profile before choosing a worker; applying does not book the job.</p>
+            <Link to={`/profile?welcome=1&next=${encodeURIComponent(`/gigs/${gig.id}`)}`} className="inline-block text-sm font-semibold text-brand-700 underline">Improve your profile before applying</Link>
           </form>
         )}
         {viewer === 'other_worker' && myApp?.status === 'pending' && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 p-4">
             <p className="flex items-center gap-2 font-semibold text-brand-800"><CheckCircle2 className="size-5" aria-hidden /> You applied {timeAgo(myApp.created_at)}. Waiting for the customer to choose.</p>
-            <Button variant="secondary" size="sm" onClick={() => run(() => api.withdrawApplication(gig.id), 'Application withdrawn.')}>Withdraw</Button>
+            <div className="flex flex-wrap gap-2"><ButtonLink to="/my-work" variant="secondary" size="sm">Track in My work</ButtonLink><ConfirmAction variant="danger" label="Withdraw application" confirmText="Withdraw your application? You can apply again while this gig is still open." onConfirm={() => run(() => api.withdrawApplication(gig.id), 'Application withdrawn.')} /></div>
           </div>
         )}
         {viewer === 'other_worker' && myApp?.status === 'declined' && (

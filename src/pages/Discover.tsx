@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { Compass, Search } from 'lucide-react'
 import { discoverGigs, PAGE_SIZE } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { CATEGORIES } from '../lib/categories'
 import { useAreaLookup } from '../lib/hooks'
-import { Button, ButtonLink, EmptyState, ErrorState, PageHeader, Skeleton } from '../components/ui'
+import { Button, ButtonLink, EmptyState, ErrorState, Skeleton } from '../components/ui'
+import { CategoryIcon } from '../components/CategoryIcon'
 import { GigCard } from '../components/gig/GigCard'
 import { AreaSelect } from '../components/AreaSelect'
 
@@ -13,7 +15,9 @@ export default function Discover() {
   const { profile, userId } = useAuth()
   const areaOf = useAreaLookup()
   const [areaOverride, setAreaOverride] = useState<string | null>(null)
-  const [category, setCategory] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const category = CATEGORIES.some((c) => c.slug === params.get('category')) ? params.get('category') : null
+  const setCategory = (value: string | null) => setParams((previous) => { const next = new URLSearchParams(previous); if (value) next.set('category', value); else next.delete('category'); return next })
   const hasSkills = Boolean(profile?.skills?.length)
   const [skillsOnly, setSkillsOnly] = useState(false)
 
@@ -31,13 +35,10 @@ export default function Discover() {
 
   return (
     <div>
-      <PageHeader
-        title="Find work near you"
-        subtitle={area ? `Sorted by distance from ${areaOf(area)?.name ?? 'your area'}.` : 'Choose your area to see the closest gigs first.'}
-        action={!userId ? <ButtonLink to="/signup?role=worker" size="sm">Join to apply</ButtonLink> : undefined}
-      />
+      <div className="discover-banner"><div><span className="eyebrow">MAKE ROOM FOR YOUR NEXT OPPORTUNITY</span><h1>Good work. Close to home.</h1><p>Choose a gig that fits your skills and your day. See the full payout before you apply.</p>{!userId && <ButtonLink className="mt-5" to="/signup?role=worker" size="sm">Create your free worker profile</ButtonLink>}</div><img src="/images/craftsperson.webp" alt="Illustrative craftsperson working on a chair" width="145" height="130" /></div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold tracking-tight">Find work near you</h2><p className="text-xs text-muted">{area ? `Closest to ${areaOf(area)?.name ?? 'your area'} first` : 'Choose an area to sort by distance'}</p></div>
 
-      <div className="mb-5 space-y-3">
+      <div className="mb-6 space-y-4 rounded-xl border border-line bg-white p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label htmlFor="area-filter" className="text-sm font-semibold sm:w-24">Near</label>
           <div className="sm:w-72">
@@ -57,7 +58,7 @@ export default function Discover() {
             </button>
             {CATEGORIES.map((c) => (
               <button key={c.slug} type="button" className="chip" aria-pressed={category === c.slug} onClick={() => setCategory(category === c.slug ? null : c.slug)}>
-                <span aria-hidden>{c.emoji}</span> {c.label}
+                <CategoryIcon category={c.slug} className="size-4" /> {c.label}
               </button>
             ))}
           </div>
@@ -80,7 +81,7 @@ export default function Discover() {
             </Button>
           }
         >
-          Try another category or area. New gigs are posted every day — check back soon.
+          Try a different category or remove the skills filter. You can also check back for new opportunities.
         </EmptyState>
       ) : (
         <>

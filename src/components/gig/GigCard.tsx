@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
-import { categoryEmoji, categoryLabel } from '../../lib/categories'
+import { ArrowUpRight, CalendarDays, MapPin, Users } from 'lucide-react'
+import { categoryLabel } from '../../lib/categories'
+import { CategoryIcon } from '../CategoryIcon'
 import { formatDay, timeAgo } from '../../lib/format'
 import { formatDistance } from '../../lib/geo'
 import { TIME_WINDOW_LABEL } from '../../lib/gig-rules'
@@ -12,12 +13,12 @@ export function GigCard({ gig, matchesSkills }: { gig: DiscoverGig; matchesSkill
   return (
     <Link
       to={`/gigs/${gig.id}`}
-      className="card group flex flex-col gap-3 p-4 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md"
+      className="card group flex flex-col gap-4 p-5 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-3">
           <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-xl bg-canvas text-xl">
-            {categoryEmoji(gig.category)}
+            <CategoryIcon category={gig.category} />
           </span>
           <div className="min-w-0">
             <p className="text-xs font-semibold text-muted">{categoryLabel(gig.category)}</p>
@@ -45,12 +46,13 @@ export function GigCard({ gig, matchesSkills }: { gig: DiscoverGig; matchesSkill
           {gig.applicant_count === 0 ? 'Be the first to apply' : `${gig.applicant_count} applied`}
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3 text-xs text-muted">
+      <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-4 text-xs text-muted">
         <span>
           Posted by <span className="font-semibold text-ink-soft">{gig.customer_name}</span> · {timeAgo(gig.created_at)}
         </span>
         {matchesSkills && <span className="rounded-full bg-brand-50 px-2 py-0.5 font-semibold text-brand-800">Matches your skills</span>}
         {gig.is_demo && <DemoBadge />}
+        <span className="ml-auto inline-flex items-center gap-1 font-semibold text-brand-700">View gig <ArrowUpRight size={15} aria-hidden /></span>
       </div>
     </Link>
   )

@@ -7,7 +7,7 @@ import type { Role } from '../lib/types'
 import { Button } from './ui'
 import { useToast } from './ui/toast'
 
-export function DemoButtons({ compact = false }: { compact?: boolean }) {
+export function DemoButtons({ compact = false, next }: { compact?: boolean; next?: string | null }) {
   const { signInDemo } = useAuth()
   const [busy, setBusy] = useState<Role | null>(null)
   const navigate = useNavigate()
@@ -17,7 +17,7 @@ export function DemoButtons({ compact = false }: { compact?: boolean }) {
     setBusy(role)
     try {
       await signInDemo(role)
-      navigate(role === 'customer' ? '/my-gigs' : '/discover')
+      navigate(next ?? (role === 'customer' ? '/my-gigs' : '/discover'))
     } catch (e) {
       toast.show(friendlyError(e), 'error')
     } finally {

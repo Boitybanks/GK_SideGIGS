@@ -18,8 +18,8 @@ test('P0 journey on a phone', async ({ page }) => {
 
   // HOME
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Your work counts')
-  await expect(page.getByText('earned by workers')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Your thing')
+  await expect(page.getByText('Free to join', { exact: true })).toBeVisible()
   await shot(page, '01-home')
 
   // AUTH (demo customer)

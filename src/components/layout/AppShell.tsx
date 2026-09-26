@@ -47,15 +47,15 @@ export function AppShell() {
   const items = useNavItems()
   const { userId, profile } = useAuth()
   const { pathname } = useLocation()
-  const isLanding = pathname === '/'
+  const isLanding = pathname === '/' || pathname === '/welcome'
 
   return (
     <div className="flex min-h-dvh flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">
         Skip to content
       </a>
-      <header className="sticky top-0 z-30 border-b border-line/80 bg-canvas/90 backdrop-blur supports-[backdrop-filter]:bg-canvas/75">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <header className="sticky top-0 z-30 border-b border-line/80 bg-canvas/95 backdrop-blur">
+        <div className="page-width flex h-[76px] items-center justify-between gap-4">
           <Logo to={userId ? (profile?.role === 'customer' ? '/my-gigs' : '/discover') : '/'} />
           <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {items.map((item) => (
@@ -64,7 +64,7 @@ export function AppShell() {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-brand-50 text-brand-800' : 'text-ink-soft hover:bg-white'}`
+                  `rounded-lg px-3 py-2 text-xs font-semibold transition ${isActive ? 'bg-brand-50 text-brand-800' : 'text-ink-soft hover:bg-white'}`
                 }
               >
                 {item.label}
@@ -73,7 +73,7 @@ export function AppShell() {
           </nav>
           {!userId && (
             <NavLink to="/signup" className={buttonClass('primary', 'sm')}>
-              Join free
+              Get started <span aria-hidden>↗</span>
             </NavLink>
           )}
         </div>
@@ -81,14 +81,14 @@ export function AppShell() {
 
       <DemoSwitcher />
 
-      <main id="main" className={`flex-1 ${isLanding ? '' : 'mx-auto w-full max-w-6xl px-4 py-6 sm:py-8'} pb-28 md:pb-12`}>
+      <main id="main" className={`flex-1 ${isLanding ? '' : 'mx-auto w-full max-w-6xl px-4 py-6 sm:py-10'} pb-24 md:pb-0`}>
         <Suspense fallback={<Spinner />}>
           <Outlet />
         </Suspense>
       </main>
 
-      <footer className="hidden border-t border-line bg-white/60 md:block">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-muted">
+      <footer className="border-t border-line bg-white/60 pb-20 md:pb-0">
+        <div className="page-width flex flex-wrap items-center justify-between gap-5 py-8 text-xs text-muted">
           <p>
             <strong className="text-ink">SideGigs</strong> — Find work. Get it done. Build your name. Built by team CodeCraft.
           </p>

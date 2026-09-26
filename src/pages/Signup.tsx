@@ -7,6 +7,7 @@ import type { Role } from '../lib/types'
 import { firstError, signupSchema } from '../lib/validation'
 import { Button, Card, Field } from '../components/ui'
 import { AreaSelect } from '../components/AreaSelect'
+import { safeNext } from '../lib/navigation'
 
 const roleOptions: { value: Role; title: string; body: string; icon: typeof Hammer }[] = [
   { value: 'worker', title: 'I want to find work', body: 'Get paid for your skills and build a verified portfolio. Always free.', icon: Hammer },
@@ -16,6 +17,7 @@ const roleOptions: { value: Role; title: string; body: string; icon: typeof Hamm
 export default function Signup() {
   const { signUp, userId, profile } = useAuth()
   const [params] = useSearchParams()
+  const next = safeNext(params.get('next'))
   const navigate = useNavigate()
   const initialRole = params.get('role') === 'customer' ? 'customer' : params.get('role') === 'worker' ? 'worker' : ''
   const [form, setForm] = useState({ display_name: '', email: '', password: '', role: initialRole as Role | '', area_slug: '' })
@@ -23,7 +25,7 @@ export default function Signup() {
   const [formError, setFormError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  if (userId && profile && !busy) return <Navigate to={profile.role === 'customer' ? '/my-gigs' : '/discover'} replace />
+  if (userId && profile && !busy) return <Navigate to={next ?? (profile.role === 'customer' ? '/my-gigs' : '/discover')} replace />
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -32,14 +34,16 @@ export default function Signup() {
     setFormError('')
     const parsed = signupSchema.safeParse(form)
     if (!parsed.success) {
-      setErrors(firstError(parsed.error))
+      const fields = firstError(parsed.error)
+      setErrors(fields)
+      document.getElementById(Object.keys(fields)[0])?.focus()
       return
     }
     setErrors({})
     setBusy(true)
     try {
       await signUp(parsed.data)
-      navigate(parsed.data.role === 'worker' ? '/profile?welcome=1' : '/gigs/new?welcome=1', { replace: true })
+      navigate(parsed.data.role === 'worker' ? `/profile?welcome=1${next ? `&next=${encodeURIComponent(next)}` : ''}` : next ?? '/gigs/new?welcome=1', { replace: true })
     } catch (err) {
       setFormError(friendlyError(err))
     } finally {
@@ -52,16 +56,17 @@ export default function Signup() {
   return (
     <div className="mx-auto max-w-lg">
       <h1 className="text-3xl font-extrabold">Join SideGigs</h1>
-      <p className="mt-1 text-muted">Free for workers. Takes less than a minute.</p>
+      <p className="mt-1 text-muted">Your skills, your schedule. Start earning extra income or find the help you need.</p>
+      {next && <p className="mt-4 rounded-xl bg-brand-50 p-3 text-sm text-brand-800">We’ll bring you back to your chosen task after you set up your account.</p>}
       <Card className="mt-6 p-5">
         <form onSubmit={onSubmit} noValidate className="space-y-5">
           <fieldset>
             <legend className="mb-2 text-sm font-semibold">What do you want to do first?</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2" id="role" tabIndex={-1}>
               {roleOptions.map((r) => (
                 <label
                   key={r.value}
-                  className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${
+                  className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition focus-within:ring-2 focus-within:ring-brand-600 ${
                     form.role === r.value ? 'border-brand-600 bg-brand-50 ring-2 ring-brand-200' : 'border-line bg-white hover:border-brand-200'
                   }`}
                 >
@@ -81,8 +86,8 @@ export default function Signup() {
           <Field label="Your name" htmlFor="display_name" error={errors.display_name} hint="Shown on your profile, e.g. “Sipho Dlamini” or “Kasi Coffee Co.”">
             <input id="display_name" autoComplete="name" className="input" value={form.display_name} onChange={(e) => set('display_name', e.target.value)} {...err('display_name')} />
           </Field>
-          <Field label="Your area" htmlFor="area" error={errors.area_slug} hint="Only your area is shown — never your address.">
-            <AreaSelect id="area" value={form.area_slug} onChange={(v) => set('area_slug', v)} invalid={Boolean(errors.area_slug)} />
+          <Field label="Your area" htmlFor="area_slug" error={errors.area_slug} hint="Only your area is shown — never your address.">
+            <AreaSelect id="area_slug" value={form.area_slug} onChange={(v) => set('area_slug', v)} invalid={Boolean(errors.area_slug)} />
           </Field>
           <Field label="Email" htmlFor="email" error={errors.email}>
             <input id="email" type="email" autoComplete="email" inputMode="email" className="input" value={form.email} onChange={(e) => set('email', e.target.value)} {...err('email')} />
@@ -94,7 +99,7 @@ export default function Signup() {
           <Button type="submit" block size="lg" loading={busy}>Create my free account</Button>
         </form>
         <p className="mt-4 text-center text-sm text-muted">
-          Already have an account? <Link to="/login" className="font-semibold text-brand-700 hover:underline">Sign in</Link>
+          Already have an account? <Link to={`/login${next ? `?next=${encodeURIComponent(next)}` : ''}`} className="font-semibold text-brand-700 hover:underline">Sign in</Link>
         </p>
       </Card>
     </div>

@@ -33,8 +33,9 @@ function RequireAuth({ children }: { children: ReactNode }) {
   const { userId, profile, loading } = useAuth()
   const location = useLocation()
   if (loading) return <Spinner />
-  if (!userId) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />
-  if (!profile && location.pathname !== '/profile') return <Navigate to="/profile?setup=1" replace />
+  const next = encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)
+  if (!userId) return <Navigate to={`/login?next=${next}`} replace />
+  if (!profile && location.pathname !== '/profile') return <Navigate to={`/profile?setup=1&next=${next}`} replace />
   return <>{children}</>
 }
 
@@ -65,6 +66,7 @@ export default function App() {
               <Routes>
                 <Route element={<AppShell />}>
                   <Route index element={<HomeRoute />} />
+                  <Route path="welcome" element={<Landing />} />
                   <Route path="login" element={<Login />} />
                   <Route path="signup" element={<Signup />} />
                   <Route path="discover" element={<Discover />} />

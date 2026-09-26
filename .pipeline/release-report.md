@@ -1,8 +1,27 @@
 # Release report
 
 **PRODUCT:** SideGigs — team CodeCraft (Boitumelo, Mthandeki, Musa, Zanele)
-**STATUS:** SHIPPED
-**PUBLIC URL:** https://sidegigs-codecraft.netlify.app
+**STATUS:** APPROVED — production deployment in progress
+**PREVIEW URL:** http://127.0.0.1:5175
+**TARGET PUBLIC URL:** https://sidegigs-codecraft.netlify.app
+
+## Current redesign gates — 26 September 2026
+
+Second design iteration: photography, tutoring and beauty replace the trades-led campaign. Eight visible categories cover creative, knowledge, technical and everyday work. DM Sans / Instrument Serif pairing and a three-panel editorial gallery replace the initial split hero. Typecheck, lint and production build passed again. No deployment performed.
+
+- Typecheck: PASS (`npm run typecheck`).
+- Lint: PASS (`npm run lint`).
+- Production build: PASS using Vite's native config loader (Windows process restrictions prevent the default config bundler).
+- Whitespace/diff check: PASS.
+- Browser review: desktop and 390px phone layout inspected; no horizontal overflow; category link selects Gardening; calculator verifies R1,000 + R150 = R1,150; demo customer login returns to `/gigs/new`; posting form verifies R500 + R75 = R575. No job published during design review.
+- Automated tests: NOT PASSED for this revision. Playwright worker creation blocked by Windows `spawn EPERM`; native-loader Vitest thread run did not finish and was stopped. New navigation tests and local design-review tests are present. Full lifecycle must be rerun before release.
+- Deployment/public smoke test: now authorized by user; Git-connected production deployment is in progress. Historical results below apply to the previous version, not this redesign.
+
+Changes: editorial green/ivory visual identity, three rotating worker campaign scenes with pause/reduced-motion support, clearer earning/hiring paths, category browsing, accessible form guidance, preserved destinations through authentication, and clearer application/selection messaging. Campaign images are AI-generated illustrations, disclosed in the UI; income is earned through completed work, not passive or guaranteed.
+
+Local preview uses the existing Supabase backend. Netlify-only contact reveal and credential-export functions are not hosted by the local Vite server. Do not treat the local preview as a fully isolated sandbox.
+
+## Historical production gates (previous version)
 
 | Check | Result |
 |---|---|

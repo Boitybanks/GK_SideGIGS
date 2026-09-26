@@ -11,6 +11,7 @@ import { firstError, phoneSchema, profileSchema } from '../lib/validation'
 import { Button, ButtonLink, Card, Field, PageHeader } from '../components/ui'
 import { AreaSelect } from '../components/AreaSelect'
 import { useToast } from '../components/ui/toast'
+import { safeNext } from '../lib/navigation'
 
 export default function Profile() {
   const { profile } = useAuth()
@@ -21,6 +22,7 @@ export default function Profile() {
 function ProfileForm() {
   const { userId, profile, refreshProfile, signOut, session } = useAuth()
   const [params] = useSearchParams()
+  const next = safeNext(params.get('next'))
   const navigate = useNavigate()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -48,7 +50,9 @@ function ProfileForm() {
     e.preventDefault()
     const parsed = profileSchema.safeParse(form)
     if (!parsed.success) {
-      setErrors(firstError(parsed.error))
+      const fields = firstError(parsed.error)
+      setErrors(fields)
+      document.getElementById(Object.keys(fields)[0])?.focus()
       return
     }
     setErrors({})
@@ -60,7 +64,7 @@ function ProfileForm() {
       await refreshProfile()
       await queryClient.invalidateQueries({ queryKey: ['profile', userId] })
       toast.show('Profile saved.')
-      if (isSetup || params.get('welcome')) navigate(data.role === 'worker' ? '/discover' : '/gigs/new')
+      if (isSetup || params.get('welcome')) navigate(next ?? (data.role === 'worker' ? '/discover' : '/gigs/new'))
     } catch (err) {
       toast.show(friendlyError(err), 'error')
     } finally {
@@ -94,7 +98,7 @@ function ProfileForm() {
       {params.get('welcome') && (
         <div className="mb-5 flex items-start gap-3 rounded-2xl bg-brand-50 p-4 text-brand-800 ring-1 ring-brand-100">
           <PartyPopper className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <p className="text-sm"><strong>Welcome to SideGigs!</strong> Add your skills so customers can see what you do — then find your first gig.</p>
+          <p className="text-sm"><strong>Your account is ready.</strong> Add a short introduction and your skills so customers know why to choose you. {next ? 'Then continue to your chosen task.' : 'Then find your first gig.'}</p>
         </div>
       )}
       {readOnly && (
@@ -131,7 +135,7 @@ function ProfileForm() {
         <Card className="p-5">
           <fieldset>
             <legend className="font-bold">Your skills</legend>
-            <p className="mb-3 text-sm text-muted">Pick everything you can do. We use this to show you matching gigs.</p>
+            <p className="mb-3 text-sm text-muted">Pick the work you can confidently do. Customers see these skills when you apply.</p>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
                 <button key={c.slug} type="button" className="chip" aria-pressed={form.skills.includes(c.slug)} onClick={() => toggleSkill(c.slug)}>
@@ -141,7 +145,7 @@ function ProfileForm() {
             </div>
           </fieldset>
         </Card>
-        <Button type="submit" size="lg" block loading={busy}>{isSetup ? 'Save and continue' : 'Save profile'}</Button>
+        <Button type="submit" size="lg" block loading={busy}>{isSetup || params.get('welcome') ? next ? 'Save and return to your task' : form.role === 'worker' ? 'Save and find work' : 'Save and post a gig' : 'Save profile'}</Button>
         </fieldset>
       </form>
 
@@ -152,7 +156,7 @@ function ProfileForm() {
             <div>
               <h2 className="font-bold">Phone number (private)</h2>
               <p className="text-sm text-muted">
-                Encrypted on this device with post-quantum cryptography. Only someone you are matched with on a gig can reveal it.
+                Stored encrypted and shared through the gig’s contact panel only after you are matched. Your phone number is never shown on your public profile.
               </p>
             </div>
           </div>
@@ -165,7 +169,12 @@ function ProfileForm() {
             </div>
             <Button type="submit" variant="secondary" loading={phoneBusy}>{phoneQ.data ? 'Replace' : 'Save'}</Button>
             {phoneQ.data && (
-              <Button variant="danger" onClick={async () => { await removePhone(userId!); await phoneQ.refetch(); toast.show('Phone number removed.') }}>Remove</Button>
+              <Button variant="danger" disabled={phoneBusy} onClick={async () => {
+                setPhoneBusy(true)
+                try { await removePhone(userId!); await phoneQ.refetch(); toast.show('Phone number removed.') }
+                catch (err) { toast.show(friendlyError(err), 'error') }
+                finally { setPhoneBusy(false) }
+              }}>Remove</Button>
             )}
           </form>
         </Card>

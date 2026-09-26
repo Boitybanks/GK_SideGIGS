@@ -72,19 +72,23 @@ export default function PostGig() {
     }
   }
 
-  const invalid = (k: string) => (errors[k] ? { 'aria-invalid': true as const, 'aria-describedby': `${k}-error` } : {})
+  const invalid = (k: string) => (errors[k] ? { 'aria-invalid': true as const, 'aria-describedby': `${k === 'payout_cents' ? 'payout' : k}-error` } : {})
 
   return (
     <div className="mx-auto max-w-2xl">
       {params.get('welcome') && (
         <div className="mb-5 flex items-start gap-3 rounded-2xl bg-brand-50 p-4 text-brand-800 ring-1 ring-brand-100">
           <PartyPopper className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <p className="text-sm"><strong>Welcome to SideGigs!</strong> Post your first task — people near you can apply within minutes.</p>
+          <p className="text-sm"><strong>Welcome to SideGigs!</strong> Tell people nearby what you need. You choose a worker after reviewing their applications.</p>
         </div>
       )}
-      <PageHeader title="Post a gig" subtitle="Describe the task, set what the worker earns and publish." />
+      <PageHeader title="Good help starts here." subtitle="Post a gig for nearby workers. You’re in control of who you hire." />
+      <ol aria-label="How hiring works" className="mb-6 grid grid-cols-3 gap-3 rounded-2xl border border-line bg-white p-4 text-sm">
+        {['Post your task', 'Choose a worker', 'Confirm a job well done'].map((step, index) => <li key={step}><span className="mb-2 grid size-6 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">{index + 1}</span><span className="font-semibold">{step}</span></li>)}
+      </ol>
       <form onSubmit={onSubmit} noValidate className="space-y-5">
         <Card className="space-y-4 p-5">
+          <h2 className="text-lg font-bold">1. Tell us about the task</h2>
           <Field label="What do you need done?" htmlFor="title" error={errors.title} hint="e.g. “Paint my front wall” or “Grade 10 maths tutoring”">
             <input id="title" className="input" maxLength={80} value={form.title} onChange={(e) => set('title', e.target.value)} {...invalid('title')} />
           </Field>
@@ -105,6 +109,7 @@ export default function PostGig() {
         </Card>
 
         <Card className="space-y-4 p-5">
+          <h2 className="text-lg font-bold">2. Where and when?</h2>
           <Field label="Area" htmlFor="area_slug" error={errors.area_slug} hint="Shown publicly so nearby workers find your gig.">
             <AreaSelect id="area_slug" value={form.area_slug} onChange={(v) => set('area_slug', v)} invalid={Boolean(errors.area_slug)} placeholder="Choose the area" />
           </Field>
@@ -121,10 +126,11 @@ export default function PostGig() {
         </Card>
 
         <Card className="space-y-4 p-5">
+          <h2 className="text-lg font-bold">3. Set a clear budget</h2>
           <Field label="What will the worker earn?" htmlFor="payout" error={errors.payout_cents} hint="Between R50 and R50 000. The worker receives this full amount.">
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center font-bold text-muted">R</span>
-              <input id="payout" type="number" inputMode="numeric" min={50} max={50000} step={10} className="input pl-8 text-lg font-bold"
+              <input id="payout" type="number" inputMode="decimal" min={50} max={50000} step={0.01} className="input pl-8 text-lg font-bold"
                 placeholder="500" value={form.payout_rands} onChange={(e) => set('payout_rands', e.target.value)} {...invalid('payout_cents')} />
             </div>
           </Field>
@@ -143,9 +149,9 @@ export default function PostGig() {
           <div className="flex items-start gap-3">
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700"><Lock className="size-4" aria-hidden /></span>
             <div>
-              <h2 className="font-bold">Private details</h2>
+              <h2 className="text-lg font-bold">4. Add private details</h2>
               <p className="text-sm text-muted">
-                Encrypted on this device with post-quantum cryptography before it is saved. Only the worker you choose can reveal it.
+                Your exact address is kept off the public listing. These details are stored encrypted and can be revealed by the worker you choose.
               </p>
             </div>
           </div>
@@ -158,6 +164,7 @@ export default function PostGig() {
         </Card>
 
         {formError && <p role="alert" className="rounded-lg bg-clay-50 px-3 py-2 text-sm font-medium text-clay-700">{formError}</p>}
+        <p className="text-sm text-muted">After publishing, review applications on your gig page. Nothing is booked until you choose a worker. Keep phone numbers and street addresses out of the public task description.</p>
         <Button type="submit" size="lg" block loading={busy}>Publish gig</Button>
       </form>
     </div>

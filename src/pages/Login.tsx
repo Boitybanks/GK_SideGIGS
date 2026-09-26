@@ -5,10 +5,7 @@ import { friendlyError } from '../lib/errors'
 import { firstError, loginSchema } from '../lib/validation'
 import { Button, Card, Field } from '../components/ui'
 import { DemoButtons } from '../components/DemoButtons'
-
-function safeNext(next: string | null): string | null {
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : null
-}
+import { safeNext } from '../lib/navigation'
 
 export default function Login() {
   const { signIn, userId, profile } = useAuth()
@@ -28,7 +25,9 @@ export default function Login() {
     setFormError('')
     const parsed = loginSchema.safeParse({ email, password })
     if (!parsed.success) {
-      setErrors(firstError(parsed.error))
+      const fields = firstError(parsed.error)
+      setErrors(fields)
+      document.getElementById(Object.keys(fields)[0])?.focus()
       return
     }
     setErrors({})
@@ -47,6 +46,7 @@ export default function Login() {
     <div className="mx-auto max-w-md">
       <h1 className="text-3xl font-extrabold">Welcome back</h1>
       <p className="mt-1 text-muted">Sign in to find work or manage your gigs.</p>
+      {next && <p className="mt-4 rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Your next step is saved. Sign in to pick up where you left off.</p>}
       <Card className="mt-6 p-5">
         <form onSubmit={onSubmit} noValidate className="space-y-4">
           <Field label="Email" htmlFor="email" error={errors.email}>
@@ -61,13 +61,13 @@ export default function Login() {
           <Button type="submit" block size="lg" loading={busy}>Sign in</Button>
         </form>
         <p className="mt-4 text-center text-sm text-muted">
-          New to SideGigs? <Link to="/signup" className="font-semibold text-brand-700 hover:underline">Create a free account</Link>
+          New to SideGigs? <Link to={`/signup${next ? `?next=${encodeURIComponent(next)}${next.startsWith('/gigs/new') ? '&role=customer' : ''}` : ''}`} className="font-semibold text-brand-700 hover:underline">Create a free account</Link>
         </p>
       </Card>
       <Card className="mt-4 p-5">
         <p className="text-sm font-bold">Just looking? Use a demo account</p>
         <p className="mb-3 text-xs text-muted">Sample data, clearly labelled. Switch between customer and worker any time.</p>
-        <DemoButtons compact />
+        <DemoButtons compact next={next} />
       </Card>
     </div>
   )
