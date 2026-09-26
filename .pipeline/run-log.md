@@ -16,3 +16,16 @@
 
 ## Stages 2–5
 - product-brief, architecture, implementation-plan, constitution, spec, plan, tasks, quality review written. Gate: PASS.
+
+## Stages 6–7 — Build
+- Team: coordinator built vertical slices A–M directly (single context kept architecture coherent); independent REVIEW agent run as a fresh read-only subagent. Beads unavailable → Spec Kit `tasks.md` as shared state.
+- DB: 5 migrations applied (schema+RLS, RPCs, reference+demo seed, discover_workers, review hardening). Accounts created by `create_account` sign in normally (verified).
+- PQ: keys generated locally; seeds stored as Netlify **secret** env vars (production context, builds/functions/runtime scopes — the connector silently drops secrets with context "all" or scope "functions" only; logged).
+- Gates after each slice: typecheck, lint, 27 unit tests, build — all green.
+
+## Stage 8 — Release
+- Netlify site `sidegigs-codecraft` created; deployed 4× via Netlify MCP (local secret files moved aside during upload).
+- Prod smoke: routes 200, security headers present, reveal-contact decrypts for both matched parties / 403 for strangers / 400 bad input; work-credential ML-DSA-65 signature verifies, tamper fails.
+- Playwright (Pixel 7) full two-sided journey on production: PASS, zero console errors (CSP allows the Netlify HUD inline snippet by hash only).
+- Live journey test (`npm run test:journey`): 12/12 PASS. Test-created demo rows deleted afterwards.
+- Netlify injects its own dismissible "Powered by Netlify" HUD badge bottom-right, which overlaps the mobile tab bar; left as-is (host-owned) — owner can disable it in Netlify project settings.

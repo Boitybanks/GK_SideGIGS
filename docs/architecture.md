@@ -30,7 +30,7 @@ Supabase Postgres. **All state transitions go through `security definer` RPC fun
 | `portfolio_items` | verified work record, created only by `confirm_completion` | public |
 | `reports` | safety reports | reporter |
 
-Lifecycle: `open → matched → in_progress → completed` (`cancelled` from open/matched). RPCs: `create_account`, `create_gig`, `apply_to_gig`, `withdraw_application`, `select_worker`, `start_gig`, `mark_gig_done`, `confirm_completion`, `submit_review`, `cancel_gig`, `add_portfolio_evidence`, `report_content`, `log_contact_reveal`, `discover_gigs`, `worker_stats`, `impact_metrics`. RLS helper functions live in a non-exposed `private` schema (avoids policy recursion).
+Lifecycle: `open → matched → in_progress → completed` (`cancelled` from open/matched). Completion needs two parties: the worker marks done, then the customer confirms. RPCs: `create_account`, `create_gig`, `apply_to_gig`, `withdraw_application`, `select_worker`, `start_gig`, `mark_gig_done`, `confirm_completion`, `submit_review`, `cancel_gig`, `add_portfolio_evidence`, `report_content`, `log_contact_reveal`, `discover_gigs`, `worker_stats`, `impact_metrics`. RLS helper functions live in a non-exposed `private` schema (avoids policy recursion).
 
 ## 4. Auth, storage, permissions
 - **Auth:** Supabase email + password. Accounts are created by `create_account` (validated, bcrypt-hashed, rate-limited), then the client signs in normally (see assumptions A5). Sessions/JWTs are standard Supabase.

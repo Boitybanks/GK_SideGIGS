@@ -148,6 +148,7 @@ export default function GigDetail() {
   const myArea = areaOf(profile?.area_slug)
   const dist = gigArea && myArea && viewer !== 'customer' ? distanceKm(gigArea, myArea) : null
   const names: Record<string, string> = {}
+  for (const a of appsQ.data ?? []) if (a.worker) names[a.worker_id] = a.worker.display_name
   if (gig.customer) names[gig.customer.id] = gig.customer.display_name
   if (gig.worker) names[gig.worker.id] = gig.worker.display_name
   if (userId) names[userId] = 'You'

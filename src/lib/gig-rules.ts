@@ -46,8 +46,11 @@ export function allowedActions(
   switch (viewer) {
     case 'customer':
       if (gig.status === 'open') actions.push('select_worker', 'cancel')
-      if (gig.status === 'matched') actions.push('confirm_completion', 'cancel', 'reveal_contact')
-      if (gig.status === 'in_progress') actions.push('confirm_completion', 'reveal_contact')
+      if (gig.status === 'matched') actions.push('cancel', 'reveal_contact')
+      if (gig.status === 'in_progress') {
+        if (gig.worker_done_at) actions.push('confirm_completion')
+        actions.push('reveal_contact')
+      }
       if (gig.status === 'completed') {
         actions.push('reveal_contact')
         if (!ctx.hasReview) actions.push('review')
@@ -82,10 +85,10 @@ export function nextStepText(gig: Pick<Gig, 'status' | 'worker_done_at'>, viewer
     : 'This gig is complete.'
   if (viewer === 'customer') {
     if (gig.status === 'open') return 'Review the people who applied and choose one.'
-    if (gig.status === 'matched') return 'Your worker is confirmed. Confirm completion once the work is done.'
+    if (gig.status === 'matched') return 'Your worker is confirmed. They will tap “Start job” when they begin.'
     return gig.worker_done_at
       ? 'Your worker says the job is done. Check it and confirm completion.'
-      : 'Work is in progress. Confirm completion once you are happy.'
+      : 'Work is in progress. You can confirm once the worker marks it as done.'
   }
   if (viewer === 'assigned_worker') {
     if (gig.status === 'matched') return 'You got the job! Tap “Start job” when you begin.'

@@ -29,3 +29,15 @@ export function seed(name: string): Uint8Array {
   if (bytes.length !== 32) throw new Error(`${name} must be 32 bytes (base64)`)
   return bytes
 }
+
+/** Never leak internals: unexpected failures become a generic JSON 500 (details go to function logs). */
+export function safe(handler: (req: Request) => Promise<Response>) {
+  return async (req: Request): Promise<Response> => {
+    try {
+      return await handler(req)
+    } catch (e) {
+      console.error('function error:', (e as Error).message)
+      return json({ error: 'The secure service is temporarily unavailable. Please try again.' }, 500)
+    }
+  }
+}

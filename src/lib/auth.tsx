@@ -99,14 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInDemo = useCallback(
     async (role: Role) => {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'local' })
       await signIn(DEMO_ACCOUNTS[role].email, DEMO_PASSWORD)
     },
     [signIn],
   )
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    // Local scope: signing out here must not end other sessions (demo accounts are shared).
+    await supabase.auth.signOut({ scope: 'local' })
     queryClient.clear()
     setSession(null)
     setProfile(null)

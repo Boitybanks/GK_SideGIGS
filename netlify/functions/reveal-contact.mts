@@ -4,9 +4,9 @@
 import type { Config } from '@netlify/functions'
 import { decryptEnvelope, type Envelope } from '../../src/lib/pq/envelope'
 import { gigAad, phoneAad } from '../../src/lib/pq/aad'
-import { json, seed, supabaseAs, UUID_RE } from '../lib/shared'
+import { json, safe, seed, supabaseAs, UUID_RE } from '../lib/shared'
 
-export default async (req: Request) => {
+export default safe(async (req: Request) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
   const jwt = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
   if (!jwt) return json({ error: 'Please sign in again.' }, 401)
@@ -38,28 +38,29 @@ export default async (req: Request) => {
   ])
 
   const secretKey = seed('PQ_KEM_SECRET_SEED')
+  // Decrypt each envelope independently so one bad envelope never hides the other.
+  async function open<T>(envelope: unknown, aad: string): Promise<T | null> {
+    if (!envelope) return null
+    try {
+      return await decryptEnvelope<T>(envelope as Envelope, aad, secretKey)
+    } catch (e) {
+      console.error('reveal-contact: envelope could not be decrypted', aad.split(':')[0], (e as Error).message)
+      return null
+    }
+  }
   try {
-    const place = gp?.envelope
-      ? await decryptEnvelope<{ address: string | null; access_notes: string | null }>(gp.envelope as Envelope, gigAad(gigId), secretKey)
-      : { address: null, access_notes: null }
-    const phone = pp?.phone_envelope
-      ? (await decryptEnvelope<{ phone: string }>(pp.phone_envelope as Envelope, phoneAad(counterpartId), secretKey)).phone
-      : null
-
+    const place = await open<{ address: string | null; access_notes: string | null }>(gp?.envelope, gigAad(gigId))
+    const phone = await open<{ phone: string }>(pp?.phone_envelope, phoneAad(counterpartId))
     await db.rpc('log_contact_reveal', { p_gig: gigId })
-
     return json({
-      address: place.address,
-      access_notes: place.access_notes,
+      address: place?.address ?? null,
+      access_notes: place?.access_notes ?? null,
       counterpart_name: counterpart?.display_name ?? null,
-      counterpart_phone: phone,
+      counterpart_phone: phone?.phone ?? null,
     })
-  } catch (e) {
-    console.error('reveal-contact decrypt failed', (e as Error).message)
-    return json({ error: 'These details could not be decrypted. Please ask your match to re-enter them.' }, 500)
   } finally {
     secretKey.fill(0)
   }
-}
+})
 
 export const config: Config = { path: '/api/reveal-contact' }

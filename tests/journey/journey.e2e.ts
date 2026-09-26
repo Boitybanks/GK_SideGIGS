@@ -35,8 +35,7 @@ async function signedIn(email: string) {
 async function ok<T>(p: PromiseLike<{ data: T; error: unknown }>): Promise<NonNullable<T>> {
   const { data, error } = await p
   if (error) throw error
-  if (data === null || data === undefined) throw new Error('No data returned')
-  return data as NonNullable<T>
+  return data as NonNullable<T> // void RPCs legitimately return null
 }
 function inDays(n: number) {
   const d = new Date(Date.now() + 2 * 3600_000)
@@ -125,6 +124,8 @@ describe('SideGigs P0 journey (live database)', () => {
   it('LIFECYCLE: only the worker starts / marks done; customer confirms completion', async () => {
     expect((await customer.c.rpc('start_gig', { p_gig: gigId })).error).toBeTruthy()
     await ok(worker.c.rpc('start_gig', { p_gig: gigId }))
+    const early = await customer.c.rpc('confirm_completion', { p_gig: gigId })
+    expect(early.error?.message).toMatch(/mark the job as done/)
     await ok(worker.c.rpc('mark_gig_done', { p_gig: gigId }))
     expect((await worker.c.rpc('confirm_completion', { p_gig: gigId })).error).toBeTruthy()
     expect((await customer.c.rpc('cancel_gig', { p_gig: gigId })).error?.message).toMatch(/before work starts/)

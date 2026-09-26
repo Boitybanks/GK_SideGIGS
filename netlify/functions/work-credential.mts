@@ -4,9 +4,9 @@
 import type { Config } from '@netlify/functions'
 import { signCredential, type WorkCredential } from '../../src/lib/pq/credential'
 import { SIGN_KID } from '../../src/lib/pq-public-keys'
-import { json, seed, supabaseAs, UUID_RE } from '../lib/shared'
+import { json, safe, seed, supabaseAs, UUID_RE } from '../lib/shared'
 
-export default async (req: Request) => {
+export default safe(async (req: Request) => {
   if (req.method !== 'GET') return json({ error: 'Method not allowed' }, 405)
   const url = new URL(req.url)
   const workerId = url.searchParams.get('worker') ?? ''
@@ -67,6 +67,6 @@ export default async (req: Request) => {
   } finally {
     signSeed.fill(0)
   }
-}
+})
 
 export const config: Config = { path: '/api/work-credential' }

@@ -13,3 +13,5 @@
 | A9 | Supabase region eu-west-2 (London). | Closest available Supabase region to South Africa in the connector's list. |
 | A10 | Identity verification is **not** implemented; no "ID verified" claims. "Verified record" means *created by SideGigs from a customer-confirmed gig*. | Honest trust labels. |
 | A11 | Work-evidence photos: images only (JPEG/PNG/WebP), ≤ 5 MB, stored in a public bucket under the worker's own folder. | Safe file restrictions; portfolio evidence is meant to be public. |
+| A12 | Shared demo logins are protected: credentials immutable, demo profiles read-only, no daily posting cap, local-scope sign-out. | Many judges use the same two accounts at once. |
+| A13 | A verified record requires two-party confirmation: the worker marks the job done, then the customer confirms. | Stronger "verified" meaning; prevents a customer creating records alone. |

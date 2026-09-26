@@ -56,7 +56,7 @@ export function ContactReveal({ gigId, onRevealed }: { gigId: string; onRevealed
                     {data.counterpart_phone}
                   </a>
                 ) : (
-                  <span className="text-muted">{data.counterpart_name ?? 'They'} haven’t added a phone number.</span>
+                  <span className="text-muted">{data.counterpart_name ? `${data.counterpart_name} hasn’t` : 'They haven’t'} added a phone number yet.</span>
                 )}
                 {data.counterpart_name && data.counterpart_phone && <span className="text-muted"> · {data.counterpart_name}</span>}
               </dd>

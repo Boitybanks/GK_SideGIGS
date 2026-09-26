@@ -6,7 +6,7 @@ import { fetchPortfolio, fetchProfile, fetchWorkCredential, fetchWorkerStats } f
 import { useAuth } from '../lib/auth'
 import { categoryEmoji, categoryLabel } from '../lib/categories'
 import { friendlyError } from '../lib/errors'
-import { formatMonthYear, percent } from '../lib/format'
+import { formatMonthYear } from '../lib/format'
 import { useAreaLookup } from '../lib/hooks'
 import { Avatar, Button, ButtonLink, Card, DemoBadge, EmptyState, ErrorState, Spinner } from '../components/ui'
 import { useToast } from '../components/ui/toast'
@@ -40,7 +40,7 @@ export default function WorkerProfile() {
   const s = statsQ.data
   const items = portfolioQ.data ?? []
   const area = areaOf(p.area_slug)
-  const resolved = s ? s.completed + s.cancelled_after_match : 0
+  const taken = s ? s.completed + s.active : 0
   const first = p.display_name.split(' ')[0]
 
   async function share() {
@@ -118,7 +118,7 @@ export default function WorkerProfile() {
               { icon: BadgeCheck, value: s?.completed ?? '—', label: 'verified gigs', color: 'text-brand-600' },
               { icon: Star, value: s?.avg_rating ?? 'New', label: s ? `rating · ${s.review_count} review${s.review_count === 1 ? '' : 's'}` : 'rating', color: 'text-sun-600' },
               { icon: Repeat, value: s?.repeat_customers ?? '—', label: 'repeat customers', color: 'text-clay-600' },
-              { icon: ShieldCheck, value: resolved ? percent(s!.completed / resolved) : '—', label: 'of accepted gigs completed', color: 'text-brand-600' },
+              { icon: ShieldCheck, value: taken ? `${s!.completed}/${taken}` : '—', label: 'jobs taken on, completed', color: 'text-brand-600' },
             ].map((x) => (
               <Card key={x.label} className="p-4">
                 <x.icon className={`size-5 ${x.color}`} aria-hidden />

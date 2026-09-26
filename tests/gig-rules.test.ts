@@ -20,16 +20,18 @@ describe('gig lifecycle rules (UI mirror of the RPCs)', () => {
     expect(allowedActions({ ...base, status: 'open' }, 'other_worker', { hasApplied: true, applicationPending: true })).toEqual(['withdraw'])
     expect(allowedActions({ ...base, status: 'open' }, 'customer')).toEqual(['select_worker', 'cancel'])
   })
-  it('matched → worker starts; customer can confirm or cancel', () => {
+  it('matched → worker starts; customer can only cancel (no confirmation before work)', () => {
     const g = { ...base, assigned_worker_id: 'w', status: 'matched' as const }
     expect(allowedActions(g, 'assigned_worker')).toContain('start')
-    expect(allowedActions(g, 'customer')).toEqual(['confirm_completion', 'cancel', 'reveal_contact'])
+    expect(allowedActions(g, 'customer')).toEqual(['cancel', 'reveal_contact'])
   })
   it('in progress → worker marks done once; customer cannot cancel', () => {
     const g = { ...base, assigned_worker_id: 'w', status: 'in_progress' as const }
     expect(allowedActions(g, 'assigned_worker')).toContain('mark_done')
     expect(allowedActions({ ...g, worker_done_at: 'now' }, 'assigned_worker')).not.toContain('mark_done')
     expect(allowedActions(g, 'customer')).not.toContain('cancel')
+    expect(allowedActions(g, 'customer')).not.toContain('confirm_completion')
+    expect(allowedActions({ ...g, worker_done_at: 'now' }, 'customer')).toContain('confirm_completion')
   })
   it('completed → customer reviews exactly once; strangers get nothing', () => {
     const g = { ...base, assigned_worker_id: 'w', status: 'completed' as const }

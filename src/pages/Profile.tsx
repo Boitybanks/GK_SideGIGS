@@ -25,6 +25,7 @@ function ProfileForm() {
   const toast = useToast()
   const queryClient = useQueryClient()
   const isSetup = !profile
+  const readOnly = Boolean(profile?.is_demo)
   const [form, setForm] = useState({
     display_name: profile?.display_name ?? (session?.user.user_metadata?.display_name as string | undefined) ?? '',
     role: (profile?.role ?? 'worker') as Role,
@@ -96,8 +97,14 @@ function ProfileForm() {
           <p className="text-sm"><strong>Welcome to SideGigs!</strong> Add your skills so customers can see what you do — then find your first gig.</p>
         </div>
       )}
+      {readOnly && (
+        <p className="mb-5 rounded-2xl bg-sun-50 p-4 text-sm text-sun-700 ring-1 ring-sun-100">
+          <strong>Shared demo account.</strong> Editing and phone numbers are switched off so every judge sees the same demo. Create your own free account to try profile editing.
+        </p>
+      )}
       <PageHeader title={isSetup ? 'Set up your profile' : 'Your profile'} subtitle="This is what customers and workers see." action={!isSetup && userId ? <ButtonLink to={`/w/${userId}`} variant="secondary" size="sm">View public profile</ButtonLink> : undefined} />
       <form onSubmit={onSubmit} noValidate className="space-y-5">
+        <fieldset disabled={readOnly} className="space-y-5 disabled:opacity-70">
         <Card className="space-y-4 p-5">
           <fieldset>
             <legend className="mb-2 text-sm font-semibold">I mostly want to…</legend>
@@ -135,9 +142,10 @@ function ProfileForm() {
           </fieldset>
         </Card>
         <Button type="submit" size="lg" block loading={busy}>{isSetup ? 'Save and continue' : 'Save profile'}</Button>
+        </fieldset>
       </form>
 
-      {!isSetup && (
+      {!isSetup && !readOnly && (
         <Card className="mt-6 p-5">
           <div className="flex items-start gap-3">
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700"><Lock className="size-4" aria-hidden /></span>
