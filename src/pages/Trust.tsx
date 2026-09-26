@@ -1,4 +1,4 @@
-import { BadgeCheck, EyeOff, Flag, KeyRound, Lock, ShieldCheck, Wallet } from 'lucide-react'
+import { BadgeCheck, EyeOff, FileText, Fingerprint, Flag, KeyRound, Lock, ShieldCheck, Wallet } from 'lucide-react'
 import { ButtonLink, Card, PageHeader } from '../components/ui'
 
 const sections = [
@@ -31,6 +31,16 @@ const sections = [
     icon: Wallet,
     title: 'Payments are simulated in this version',
     body: 'The hackathon build shows how SideGigs protection will work (held → released or refunded) but moves no real money. It is not a regulated escrow service.',
+  },
+  {
+    icon: Fingerprint,
+    title: 'A private Work ID for every accepted job',
+    body: 'When a customer accepts a worker, SideGigs issues a Work ID (like SG-7KQ4-M2XP) that only those two people can see. Quote it when you call or message each other — if someone contacting you about a job can’t give it, don’t share your address or send money.',
+  },
+  {
+    icon: FileText,
+    title: 'Documents are shown as uploaded',
+    body: 'Workers and customers can upload qualifications and other PDFs. SideGigs does not check them. ID documents are always private to the person who uploaded them; other documents appear on a profile only if its owner chooses.',
   },
   {
     icon: Flag,

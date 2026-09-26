@@ -46,6 +46,7 @@ export default function Login() {
     <div className="mx-auto max-w-md">
       <h1 className="text-3xl font-extrabold">Welcome back</h1>
       <p className="mt-1 text-muted">Sign in to find work or manage your gigs.</p>
+      {params.get('reset') === 'done' && <p role="status" className="mt-4 rounded-xl bg-brand-50 p-3 text-sm text-brand-800"><strong>Password updated.</strong> Sign in with your new password.</p>}
       {next && <p className="mt-4 rounded-xl bg-brand-50 p-3 text-sm text-brand-800">Your next step is saved. Sign in to pick up where you left off.</p>}
       <Card className="mt-6 p-5">
         <form onSubmit={onSubmit} noValidate className="space-y-4">
@@ -57,6 +58,9 @@ export default function Login() {
             <input id="password" type="password" autoComplete="current-password" className="input" value={password}
               onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(errors.password) || undefined} aria-describedby={errors.password ? 'password-error' : undefined} />
           </Field>
+          <p className="-mt-2 text-right text-sm">
+            <Link to={`/forgot-password${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ''}`} className="font-semibold text-brand-700 hover:underline">Forgot password?</Link>
+          </p>
           {formError && <p role="alert" className="rounded-lg bg-clay-50 px-3 py-2 text-sm font-medium text-clay-700">{formError}</p>}
           <Button type="submit" block size="lg" loading={busy}>Sign in</Button>
         </form>

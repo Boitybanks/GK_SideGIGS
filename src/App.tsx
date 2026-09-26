@@ -3,14 +3,18 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './lib/auth'
 import { isConfigured } from './lib/supabase'
+import { isRecoveryUrl } from './lib/recovery'
 import { ToastProvider } from './components/ui/toast'
 import { Spinner } from './components/ui'
 import { AppShell } from './components/layout/AppShell'
 import Landing from './pages/Landing'
+import Splash from './pages/Splash'
 import Discover from './pages/Discover'
 
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const PostGig = lazy(() => import('./pages/PostGig'))
 const GigDetail = lazy(() => import('./pages/GigDetail'))
 const MyGigs = lazy(() => import('./pages/MyGigs'))
@@ -44,7 +48,16 @@ function HomeRoute() {
   const { userId, profile, loading } = useAuth()
   if (loading) return <Spinner />
   if (userId && profile) return <Navigate to={profile.role === 'customer' ? '/my-gigs' : '/discover'} replace />
-  return <Landing />
+  if (userId) return <Navigate to="/profile?setup=1" replace />
+  // Signed-out visitors land on the splash and choose: register or sign in. The full story lives at /welcome.
+  return <Splash />
+}
+
+// If the reset-link redirect isn't allow-listed, Supabase falls back to the site root — send it to the reset page anyway.
+function RecoveryLinkRedirect() {
+  const { pathname, search, hash } = useLocation()
+  if (pathname === '/reset-password' || !isRecoveryUrl(search, hash)) return null
+  return <Navigate to={`/reset-password${search}${hash}`} replace />
 }
 
 function ConfigError() {
@@ -63,13 +76,16 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
+            <RecoveryLinkRedirect />
             <Suspense fallback={<Spinner />}>
               <Routes>
+                <Route index element={<HomeRoute />} />
                 <Route element={<AppShell />}>
-                  <Route index element={<HomeRoute />} />
                   <Route path="welcome" element={<Landing />} />
                   <Route path="login" element={<Login />} />
                   <Route path="signup" element={<Signup />} />
+                  <Route path="forgot-password" element={<ForgotPassword />} />
+                  <Route path="reset-password" element={<ResetPassword />} />
                   <Route path="discover" element={<Discover />} />
                   <Route path="workers" element={<Workers />} />
                   <Route path="gigs/new" element={<RequireAuth><PostGig /></RequireAuth>} />

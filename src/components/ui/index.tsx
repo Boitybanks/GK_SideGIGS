@@ -181,9 +181,10 @@ export function Field({
 
 const avatarColors = ['bg-brand-600', 'bg-clay-500', 'bg-sky-700', 'bg-sun-600', 'bg-brand-800', 'bg-clay-700']
 
-export function Avatar({ name, id, size = 'md' }: { name: string; id?: string; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function Avatar({ name, id, size = 'md', src }: { name: string; id?: string; size?: 'sm' | 'md' | 'lg' | 'xl'; src?: string | null }) {
   const seed = (id ?? name).split('').reduce((a, c) => a + c.charCodeAt(0), 0)
   const dims = { sm: 'size-8 text-xs', md: 'size-11 text-sm', lg: 'size-14 text-lg', xl: 'size-20 text-2xl' }[size]
+  if (src) return <img src={src} alt="" aria-hidden className={`shrink-0 rounded-full bg-line object-cover ${dims}`} />
   return (
     <span aria-hidden className={`grid shrink-0 place-items-center rounded-full font-bold text-white ${avatarColors[seed % avatarColors.length]} ${dims}`}>
       {initials(name)}

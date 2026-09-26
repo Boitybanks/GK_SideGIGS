@@ -8,6 +8,7 @@ import { distanceKm, formatDistance } from '../../lib/geo'
 import { useAreaLookup } from '../../lib/hooks'
 import { formatRand } from '../../lib/money'
 import { Avatar, Button, DemoBadge, EmptyState } from '../ui'
+import { avatarUrl } from '../../lib/supabase'
 
 interface Props {
   applications: ApplicationWithWorker[]
@@ -45,7 +46,7 @@ export function Applicants({ applications, gigArea, totalCents, onSelect }: Prop
         return (
           <li key={app.id} className="card p-4">
             <div className="flex items-start gap-3">
-              <Avatar name={w.display_name} id={w.id} />
+              <Avatar name={w.display_name} id={w.id} src={avatarUrl(w.avatar_path)} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-bold">{w.display_name}</p>

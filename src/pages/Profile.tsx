@@ -11,6 +11,8 @@ import { firstError, phoneSchema, profileSchema } from '../lib/validation'
 import { Button, ButtonLink, Card, Field, PageHeader } from '../components/ui'
 import { AreaSelect } from '../components/AreaSelect'
 import { useToast } from '../components/ui/toast'
+import { ProfilePhoto } from '../components/profile/ProfilePhoto'
+import { DocumentsManager } from '../components/profile/Documents'
 import { safeNext } from '../lib/navigation'
 
 export default function Profile() {
@@ -107,6 +109,7 @@ function ProfileForm() {
         </p>
       )}
       <PageHeader title={isSetup ? 'Set up your profile' : 'Your profile'} subtitle="This is what customers and workers see." action={!isSetup && userId ? <ButtonLink to={`/w/${userId}`} variant="secondary" size="sm">View public profile</ButtonLink> : undefined} />
+      {profile && <ProfilePhoto profile={profile} readOnly={readOnly} onChanged={refreshProfile} />}
       <form onSubmit={onSubmit} noValidate className="space-y-5">
         <fieldset disabled={readOnly} className="space-y-5 disabled:opacity-70">
         <Card className="space-y-4 p-5">
@@ -179,6 +182,8 @@ function ProfileForm() {
           </form>
         </Card>
       )}
+
+      {!isSetup && userId && <DocumentsManager userId={userId} readOnly={readOnly} />}
 
       <Card className="mt-6 p-5">
         <h2 className="font-semibold">Explore the ID format & selfie demo</h2>

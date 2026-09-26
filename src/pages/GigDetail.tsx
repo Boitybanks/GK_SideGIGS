@@ -17,6 +17,8 @@ import { FeeBreakdown } from '../components/gig/FeeBreakdown'
 import { LifecycleStepper, Timeline } from '../components/gig/Lifecycle'
 import { PaymentPanel } from '../components/gig/PaymentPanel'
 import { ContactReveal } from '../components/gig/ContactReveal'
+import { WorkIdCard } from '../components/gig/WorkIdCard'
+import { avatarUrl } from '../lib/supabase'
 import { Applicants } from '../components/gig/Applicants'
 import { ReviewForm } from '../components/gig/ReviewForm'
 import { ReportButton } from '../components/ReportButton'
@@ -272,7 +274,7 @@ export default function GigDetail() {
         )}
         {viewer === 'customer' && gig.worker && gig.status !== 'open' && gig.status !== 'cancelled' && (
           <div className="flex items-center gap-3 rounded-xl border border-line p-3">
-            <Avatar name={gig.worker.display_name} id={gig.worker.id} />
+            <Avatar name={gig.worker.display_name} id={gig.worker.id} src={avatarUrl(gig.worker.avatar_path)} />
             <div className="flex-1">
               <p className="font-bold">{gig.worker.display_name} {gig.worker.is_demo && <DemoBadge />}</p>
               <p className="text-xs text-muted">{gig.worker.headline}</p>
@@ -318,6 +320,15 @@ export default function GigDetail() {
 
       {isParticipant && gig.status !== 'open' && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {gig.status !== 'cancelled' && gig.customer && gig.worker && (
+            <WorkIdCard
+              gigId={gig.id}
+              gigTitle={gig.title}
+              perspective={viewer === 'customer' ? 'customer' : 'worker'}
+              myName={(viewer === 'customer' ? gig.customer : gig.worker).display_name.split(' ')[0]}
+              partnerName={(viewer === 'customer' ? gig.worker : gig.customer).display_name.split(' ')[0]}
+            />
+          )}
           {actions.includes('reveal_contact') && <ContactReveal gigId={gig.id} onRevealed={() => queryClient.invalidateQueries({ queryKey: ['events', id] })} />}
           {txnQ.data && <PaymentPanel txn={txnQ.data} perspective={viewer === 'customer' ? 'customer' : 'worker'} />}
         </div>

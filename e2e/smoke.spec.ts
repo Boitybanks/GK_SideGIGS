@@ -18,8 +18,9 @@ test('P0 journey on a phone', async ({ page }) => {
 
   // HOME
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Your thing')
-  await expect(page.getByText('Free to join', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('SideGigs')
+  await expect(page.getByRole('link', { name: /Get started/ })).toHaveAttribute('href', '/signup')
+  await expect(page.getByRole('link', { name: 'I already have an account' })).toHaveAttribute('href', '/login')
   await shot(page, '01-home')
 
   // AUTH (demo customer)
@@ -97,7 +98,7 @@ test('P0 journey on a phone', async ({ page }) => {
   // PORTFOLIO
   await page.getByRole('link', { name: /Verified record SG-/ }).click()
   await expect(page).toHaveURL(/\/w\//)
-  await expect(page.getByRole('heading', { name: 'What Sipho has done' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Recent experience' })).toBeVisible()
   const record = page.getByRole('article').filter({ hasText: title })
   await expect(record).toBeVisible()
   await expect(record.getByText(/Fixed the gate quickly and tidied up/)).toBeVisible()

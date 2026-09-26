@@ -11,7 +11,13 @@ export const supabase = createClient(url ?? 'http://localhost:54321', key ?? 'mi
 })
 
 export const EVIDENCE_BUCKET = 'work-evidence'
+export const AVATAR_BUCKET = 'avatars'
+export const DOCUMENT_BUCKET = 'documents'
 
 export function evidenceUrl(path: string): string {
   return supabase.storage.from(EVIDENCE_BUCKET).getPublicUrl(path).data.publicUrl
+}
+
+export function avatarUrl(path: string | null | undefined): string | null {
+  return path ? supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path).data.publicUrl : null
 }

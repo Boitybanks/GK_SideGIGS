@@ -15,6 +15,11 @@ Built by team **CodeCraft** — Boitumelo, Mthandeki, Musa and Zanele.
 - The customer confirms completion → a **verified record** is added to the worker’s public portfolio automatically, then the customer’s rating and review attach to it.
 - Workers share their portfolio link or download a **quantum-resistant signed work record** (ML-DSA-65) that anyone can verify at `/verify`.
 - As an experimental defence-in-depth layer, private addresses and phone numbers are encrypted in the browser with the X-Wing hybrid construction (ML-KEM-768 + X25519 → AES-256-GCM) and revealed only to the matched pair. Core security remains HTTPS, Supabase Auth, RLS, protected server secrets and audit logging; this is not a claim that the database itself is “quantum encrypted”.
+- Opening the app shows a **splash screen** that asks you to register or sign in (demo logins stay one tap away); the full story is at `/welcome`.
+- Each worker has a **Work Passport** (`/w/:id`): proven skills counted from customer-confirmed gigs, rating, completion rate, recent experience and a QR code that opens the passport.
+- Workers and customers can add a **profile photo** and upload **PDF documents** (qualifications, ID, other). Documents are never checked by SideGigs; ID documents always stay private.
+- When a customer accepts a worker, both get a private **Work ID** (e.g. `SG-7KQ4-M2XP`) to quote when they call or message each other.
+- **Forgot password** emails a reset link; the new password works on the next sign-in.
 - Live impact dashboard: people who earned, income earned, match rate, time to match, ratings, repeat work.
 
 Payments are a clearly labelled **simulation** in this version.

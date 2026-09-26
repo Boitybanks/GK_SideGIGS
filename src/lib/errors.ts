@@ -16,6 +16,7 @@ export function friendlyError(err: unknown): string {
   const e = err as MaybeError
   const msg = e.message ?? ''
   if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) return 'You seem to be offline. Check your connection and try again.'
+  if (/rate limit/i.test(msg)) return 'Too many emails have been sent. Please wait a few minutes and try again.'
   if (/Invalid login credentials/i.test(msg)) return 'That email and password do not match. Please try again.'
   if (/JWT expired|invalid JWT|not authenticated/i.test(msg)) return 'Your session has expired. Please sign in again.'
   if (/permission denied|row-level security/i.test(msg)) return 'You do not have permission to do that.'

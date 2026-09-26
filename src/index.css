@@ -34,6 +34,11 @@
   --color-muted: #647269;
   --color-canvas: #f8f9f5;
   --color-line: #dfe5dc;
+
+  /* Brand board: splash screen and Work Passport accents. */
+  --color-night: #111814;
+  --color-night-soft: #1e3a2f;
+  --color-zest: #b8f34a;
 }
 
 @layer base {

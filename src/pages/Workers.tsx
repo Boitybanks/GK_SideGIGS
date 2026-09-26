@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth'
 import { CATEGORIES, categoryLabel } from '../lib/categories'
 import { formatDistance } from '../lib/geo'
 import { Avatar, Button, DemoBadge, EmptyState, ErrorState, PageHeader, Skeleton } from '../components/ui'
+import { avatarUrl } from '../lib/supabase'
 import { AreaSelect } from '../components/AreaSelect'
 
 export default function Workers() {
@@ -57,7 +58,7 @@ export default function Workers() {
             {workers.map((w) => (
               <li key={w.id}>
                 <Link to={`/w/${w.id}`} className="card flex gap-3 p-4 hover:border-brand-200">
-                  <Avatar name={w.display_name} id={w.id} size="lg" />
+                  <Avatar name={w.display_name} id={w.id} src={avatarUrl(w.avatar_path)} size="lg" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-bold">{w.display_name}</p>

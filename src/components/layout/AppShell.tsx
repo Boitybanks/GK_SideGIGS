@@ -18,7 +18,7 @@ function useNavItems(): NavItem[] {
   const { userId, profile } = useAuth()
   if (!userId) {
     return [
-      { to: '/', label: 'Home', icon: Home, end: true },
+      { to: '/welcome', label: 'Home', icon: Home, end: true },
       { to: '/discover', label: 'Find work', icon: Compass },
       { to: '/workers', label: 'Workers', icon: Users },
       { to: '/impact', label: 'Impact', icon: BarChart3 },
@@ -56,7 +56,7 @@ export function AppShell() {
       </a>
       <header className="sticky top-0 z-30 border-b border-line/80 bg-canvas/95 backdrop-blur">
         <div className="page-width flex h-[76px] items-center justify-between gap-4">
-          <Logo to={userId ? (profile?.role === 'customer' ? '/my-gigs' : '/discover') : '/'} />
+          <Logo to={userId ? (profile?.role === 'customer' ? '/my-gigs' : '/discover') : '/welcome'} />
           <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {items.map((item) => (
               <NavLink

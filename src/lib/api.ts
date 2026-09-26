@@ -1,5 +1,5 @@
 // All data access in one place. Trust-bearing writes go through RPCs; reads rely on RLS.
-import { supabase, EVIDENCE_BUCKET } from './supabase'
+import { supabase, AVATAR_BUCKET, DOCUMENT_BUCKET, EVIDENCE_BUCKET } from './supabase'
 import { gigAad, phoneAad } from './pq/aad'
 import type { SignedCredential } from './pq/credential'
 import type {
@@ -10,17 +10,21 @@ import type {
   Gig,
   GigEvent,
   ImpactMetrics,
+  DocumentKind,
   PortfolioItem,
   Profile,
+  ProfileDocument,
   RevealedContact,
   Review,
   Transaction,
   WorkerStats,
 } from './types'
 import type { GigInput } from './validation'
-import { validateEvidenceFile } from './validation'
+import { validateEvidenceFile, validatePdf } from './validation'
+import { toSquareJpeg } from './image'
+import type { RecoveryLink } from './recovery'
 
-const PUBLIC_PROFILE = 'id, display_name, role, area_slug, headline, bio, skills, is_demo, created_at'
+const PUBLIC_PROFILE = 'id, display_name, role, area_slug, headline, bio, skills, is_demo, avatar_path, created_at'
 
 /** Post-quantum encrypt in the browser. Crypto code is loaded on demand to keep first load light. */
 async function encryptForVault(plaintext: unknown, aad: string) {
@@ -115,8 +119,8 @@ export async function removePhone(userId: string) {
 
 // ── Gigs ───────────────────────────────────────────────────────────────────
 export type GigWithPeople = Gig & {
-  customer: Pick<Profile, 'id' | 'display_name' | 'area_slug' | 'is_demo' | 'headline'> | null
-  worker: Pick<Profile, 'id' | 'display_name' | 'area_slug' | 'is_demo' | 'headline'> | null
+  customer: Pick<Profile, 'id' | 'display_name' | 'area_slug' | 'is_demo' | 'headline' | 'avatar_path'> | null
+  worker: Pick<Profile, 'id' | 'display_name' | 'area_slug' | 'is_demo' | 'headline' | 'avatar_path'> | null
 }
 
 export async function fetchGig(id: string): Promise<GigWithPeople | null> {
@@ -124,7 +128,7 @@ export async function fetchGig(id: string): Promise<GigWithPeople | null> {
     await supabase
       .from('gigs')
       .select(
-        '*, customer:profiles!gigs_customer_id_fkey(id, display_name, area_slug, is_demo, headline), worker:profiles!gigs_assigned_worker_id_fkey(id, display_name, area_slug, is_demo, headline)',
+        '*, customer:profiles!gigs_customer_id_fkey(id, display_name, area_slug, is_demo, headline, avatar_path), worker:profiles!gigs_assigned_worker_id_fkey(id, display_name, area_slug, is_demo, headline, avatar_path)',
       )
       .eq('id', id)
       .maybeSingle(),
@@ -153,14 +157,14 @@ export async function createGig(input: GigInput): Promise<string> {
 }
 
 export type ApplicationWithWorker = Application & {
-  worker: Pick<Profile, 'id' | 'display_name' | 'headline' | 'skills' | 'area_slug' | 'is_demo'> | null
+  worker: Pick<Profile, 'id' | 'display_name' | 'headline' | 'skills' | 'area_slug' | 'is_demo' | 'avatar_path'> | null
 }
 
 export async function fetchApplications(gigId: string): Promise<ApplicationWithWorker[]> {
   return must(
     await supabase
       .from('gig_applications')
-      .select('*, worker:profiles(id, display_name, headline, skills, area_slug, is_demo)')
+      .select('*, worker:profiles(id, display_name, headline, skills, area_slug, is_demo, avatar_path)')
       .eq('gig_id', gigId)
       .order('created_at'),
   )
@@ -258,6 +262,103 @@ export async function uploadEvidence(itemId: string, userId: string, file: File)
 export async function removeEvidence(itemId: string, path: string) {
   await rpc<void>('remove_portfolio_evidence', { p_item: itemId, p_path: path })
   await supabase.storage.from(EVIDENCE_BUCKET).remove([path])
+}
+
+// ── Profile photos ─────────────────────────────────────────────────────────
+/** Uploads a cropped square JPEG, points the profile at it, then retires the previous photo. */
+export async function setProfilePhoto(userId: string, file: File, previousPath: string | null): Promise<void> {
+  const blob = await toSquareJpeg(file)
+  const path = `${userId}/${crypto.randomUUID()}.jpg`
+  const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+  if (error) throw error
+  try {
+    must(await supabase.from('profiles').update({ avatar_path: path }).eq('id', userId).select('id').single())
+  } catch (err) {
+    await supabase.storage.from(AVATAR_BUCKET).remove([path])
+    throw err
+  }
+  if (previousPath) await supabase.storage.from(AVATAR_BUCKET).remove([previousPath])
+}
+
+export async function removeProfilePhoto(userId: string, path: string) {
+  must(await supabase.from('profiles').update({ avatar_path: null }).eq('id', userId).select('id').single())
+  await supabase.storage.from(AVATAR_BUCKET).remove([path])
+}
+
+// ── Documents (PDF) ────────────────────────────────────────────────────────
+export const MAX_DOCUMENTS = 20
+export type DocumentWithLink = ProfileDocument & { url: string | null }
+
+/** RLS returns all of the owner's documents to the owner and only shared ones to everyone else. Links last 10 minutes. */
+export async function fetchDocuments(ownerId: string): Promise<DocumentWithLink[]> {
+  const docs: ProfileDocument[] = must(
+    await supabase
+      .from('profile_documents')
+      .select('id, owner_id, kind, title, storage_path, size_bytes, is_public, created_at')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false }),
+  )
+  if (!docs.length) return []
+  const { data, error } = await supabase.storage.from(DOCUMENT_BUCKET).createSignedUrls(docs.map((d) => d.storage_path), 600)
+  if (error) throw error
+  const links = new Map(data.map((l) => [l.path, l.signedUrl]))
+  return docs.map((d) => ({ ...d, url: links.get(d.storage_path) ?? null }))
+}
+
+export async function uploadDocument(userId: string, input: { file: File; kind: DocumentKind; title: string; isPublic: boolean }) {
+  const problem = await validatePdf(input.file)
+  if (problem) throw new Error(problem)
+  const path = `${userId}/${crypto.randomUUID()}.pdf`
+  const { error } = await supabase.storage.from(DOCUMENT_BUCKET).upload(path, input.file, { contentType: 'application/pdf', upsert: false })
+  if (error) throw error
+  const { error: rowError } = await supabase.from('profile_documents').insert({
+    kind: input.kind,
+    title: input.title.trim(),
+    storage_path: path,
+    size_bytes: input.file.size,
+    is_public: input.kind !== 'id_document' && input.isPublic,
+  })
+  if (rowError) {
+    await supabase.storage.from(DOCUMENT_BUCKET).remove([path])
+    throw rowError
+  }
+}
+
+export async function setDocumentShared(id: string, isPublic: boolean) {
+  must(await supabase.from('profile_documents').update({ is_public: isPublic }).eq('id', id).select('id').single())
+}
+
+export async function deleteDocument(doc: Pick<ProfileDocument, 'id' | 'storage_path'>) {
+  must(await supabase.from('profile_documents').delete().eq('id', doc.id).select('id').single())
+  await supabase.storage.from(DOCUMENT_BUCKET).remove([doc.storage_path])
+}
+
+// ── Work IDs ───────────────────────────────────────────────────────────────
+/** Issued when the customer accepts a worker; RLS returns it only to that customer and worker. */
+export async function fetchWorkId(gigId: string): Promise<string | null> {
+  const row: { work_id: string } | null = must(await supabase.from('gig_work_ids').select('work_id').eq('gig_id', gigId).maybeSingle())
+  return row?.work_id ?? null
+}
+
+// ── Password reset ─────────────────────────────────────────────────────────
+export async function requestPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })
+  if (error) throw error
+}
+
+export async function startPasswordRecovery(link: Extract<RecoveryLink, { kind: 'tokens' | 'token_hash' }>) {
+  const { error } =
+    link.kind === 'tokens'
+      ? await supabase.auth.setSession({ access_token: link.accessToken, refresh_token: link.refreshToken })
+      : await supabase.auth.verifyOtp({ token_hash: link.tokenHash, type: 'recovery' })
+  if (error) throw error
+}
+
+/** Sets the new password, then signs out everywhere so any other session has to use it. */
+export async function finishPasswordReset(password: string) {
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) throw error
+  await supabase.auth.signOut({ scope: 'global' })
 }
 
 // ── Netlify Functions (post-quantum) ──────────────────────────────────────

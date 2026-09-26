@@ -10,7 +10,7 @@ test('editorial home, carousel controls, calculator, category routing and respon
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/')
+  await page.goto('/welcome')
   await expect(page.getByRole('heading', { name: /Your thing/ })).toBeVisible()
   await page.evaluate(() => document.fonts.ready)
   await expect(page.locator('.story-frame.is-active img')).toHaveJSProperty('naturalWidth', 1536)

@@ -87,6 +87,38 @@ export function validateEvidenceFile(file: { type: string; size: number }): stri
   return null
 }
 
+export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+export const PHOTO_MAX_BYTES = 10 * 1024 * 1024
+
+/** Profile photos are re-encoded in the browser, so the input may be larger than what is stored. */
+export function validatePhotoFile(file: { type: string; size: number }): string | null {
+  if (!(PHOTO_TYPES as readonly string[]).includes(file.type)) return 'Please choose a JPEG, PNG or WebP photo.'
+  if (file.size === 0) return 'That file is empty.'
+  if (file.size > PHOTO_MAX_BYTES) return 'Photos must be 10 MB or smaller.'
+  return null
+}
+
+export const PDF_MAX_BYTES = 5 * 1024 * 1024
+
+/** Type, size and the %PDF- signature, so a renamed file can't slip through. The bucket also only accepts application/pdf. */
+export async function validatePdf(file: Blob & { name?: string }): Promise<string | null> {
+  if (file.type !== 'application/pdf' && !file.name?.toLowerCase().endsWith('.pdf')) return 'Please choose a PDF file.'
+  if (file.size === 0) return 'That file is empty.'
+  if (file.size > PDF_MAX_BYTES) return 'PDFs must be 5 MB or smaller.'
+  const head = new Uint8Array(await file.slice(0, 5).arrayBuffer())
+  if (String.fromCharCode(...head) !== '%PDF-') return 'That file is not a valid PDF.'
+  return null
+}
+
+export const emailSchema = z.string().trim().toLowerCase().email('Please enter a valid email address.')
+
+export const newPasswordSchema = z
+  .object({
+    password: z.string().min(8, 'Use at least 8 characters.').max(72, 'Please use 72 characters or fewer.'),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, { message: 'The passwords don’t match.', path: ['confirm'] })
+
 export function firstError(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {}
   for (const issue of error.issues) {

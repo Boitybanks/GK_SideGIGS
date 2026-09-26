@@ -22,6 +22,20 @@ export interface Profile {
   bio: string | null
   skills: string[]
   is_demo: boolean
+  avatar_path: string | null
+  created_at: string
+}
+
+export type DocumentKind = 'qualification' | 'id_document' | 'other'
+
+export interface ProfileDocument {
+  id: string
+  owner_id: string
+  kind: DocumentKind
+  title: string
+  storage_path: string
+  size_bytes: number
+  is_public: boolean
   created_at: string
 }
 
@@ -148,6 +162,7 @@ export interface DiscoverWorker {
   avg_rating: number | null
   review_count: number
   distance_km: number | null
+  avatar_path: string | null
 }
 
 export interface ImpactMetrics {
