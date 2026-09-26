@@ -10,7 +10,6 @@ import { formatDay, timeAgo } from '../lib/format'
 import { distanceKm, formatDistance } from '../lib/geo'
 import { allowedActions, nextStepText, TIME_WINDOW_LABEL, viewerOf } from '../lib/gig-rules'
 import { useAreaLookup } from '../lib/hooks'
-import { formatRand, workerNetCents } from '../lib/money'
 import { Avatar, Button, ButtonLink, Card, DemoBadge, ErrorState, Spinner, Stars, StatusPill } from '../components/ui'
 import { useToast } from '../components/ui/toast'
 import { FeeBreakdown } from '../components/gig/FeeBreakdown'
@@ -214,7 +213,8 @@ export default function GigDetail() {
         </div>
         <p className="mt-4 whitespace-pre-line">{gig.description}</p>
         <p className="mt-4 text-xs text-muted">
-          Posted by <strong className="text-ink-soft">{gig.customer?.display_name ?? 'a customer'}</strong> · {timeAgo(gig.created_at)}
+          {gig.service_id ? 'Booked' : 'Posted'} by <strong className="text-ink-soft">{gig.customer?.display_name ?? 'a customer'}</strong>
+          {gig.service_id && gig.worker && <> from {viewer === 'assigned_worker' ? 'your' : `${gig.worker.display_name.split(' ')[0]}’s`} listed service</>} · {timeAgo(gig.created_at)}
         </p>
 
         <div className="mt-5">
@@ -273,6 +273,9 @@ export default function GigDetail() {
         {actions.includes('mark_done') && (
           <Button block size="lg" onClick={() => setScan('finish')}><ScanLine className="size-5" aria-hidden /> Mark as done</Button>
         )}
+        {actions.includes('decline_booking') && (
+          <ConfirmAction variant="danger" label="Decline booking" confirmText={`Decline this booking? ${gig.customer?.display_name.split(' ')[0] ?? 'The client'} is refunded (simulation) and the job is cancelled.`} onConfirm={() => run(() => api.declineBooking(gig.id), 'Booking declined. The client has been refunded.')} />
+        )}
         {activeScan && (
           <ScanCodeDialog
             step={activeScan}
@@ -320,7 +323,7 @@ export default function GigDetail() {
           <ConfirmAction
             label="Confirm job is complete"
             icon={<BadgeCheck className="size-5" aria-hidden />}
-            confirmText={`Confirm ${workerFirst} finished the job? The simulated payment is released: ${formatRand(workerNetCents(gig.payout_cents))} to ${workerFirst} after the 15% admin fee, and a verified record is added to their portfolio.`}
+            confirmText={`Confirm ${workerFirst} finished the job? The simulated payment is released and a verified record is added to their portfolio.`}
             onConfirm={() => run(() => api.confirmCompletion(gig.id), `Done! ${workerFirst}’s portfolio just gained a verified record.`)}
           />
         )}

@@ -19,6 +19,10 @@ const PostGig = lazy(() => import('./pages/PostGig'))
 const GigDetail = lazy(() => import('./pages/GigDetail'))
 const MyGigs = lazy(() => import('./pages/MyGigs'))
 const MyWork = lazy(() => import('./pages/MyWork'))
+const Services = lazy(() => import('./pages/Services'))
+const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
+const PostService = lazy(() => import('./pages/PostService'))
+const MyServices = lazy(() => import('./pages/MyServices'))
 const Workers = lazy(() => import('./pages/Workers'))
 const WorkerProfile = lazy(() => import('./pages/WorkerProfile'))
 const Profile = lazy(() => import('./pages/Profile'))
@@ -92,6 +96,11 @@ export default function App() {
                   <Route path="gigs/:id" element={<GigDetail />} />
                   <Route path="my-gigs" element={<RequireAuth><MyGigs /></RequireAuth>} />
                   <Route path="my-work" element={<RequireAuth><MyWork /></RequireAuth>} />
+                  <Route path="services" element={<Services />} />
+                  <Route path="services/new" element={<RequireAuth><PostService /></RequireAuth>} />
+                  <Route path="services/:id" element={<ServiceDetail />} />
+                  <Route path="services/:id/edit" element={<RequireAuth><PostService /></RequireAuth>} />
+                  <Route path="my-services" element={<RequireAuth><MyServices /></RequireAuth>} />
                   <Route path="w/:id" element={<WorkerProfile />} />
                   <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
                   <Route path="impact" element={<Impact />} />

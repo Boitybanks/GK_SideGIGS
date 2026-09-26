@@ -66,7 +66,7 @@ export default function Impact() {
               { icon: Repeat, label: 'Repeat customers', value: String(m.repeat_customers), sub: 'hired the same worker again' },
               { icon: Repeat, label: 'Workers with repeat work', value: String(m.workers_with_repeat_work), sub: '2+ completed gigs' },
               { icon: BadgeCheck, label: 'Completion rate', value: percent(m.completion_rate), sub: 'of resolved matched gigs' },
-              { icon: HandCoins, label: 'SideGigs fees (simulated)', value: formatRand(m.fees_cents), sub: '15% admin fee from workers’ pay' },
+              { icon: HandCoins, label: 'SideGigs fees (simulated)', value: formatRand(m.fees_cents), sub: '8% fee on each job, excluding VAT' },
             ].map((x) => (
               <Card key={x.label} className="p-4">
                 <x.icon className="size-5 text-brand-600" aria-hidden />

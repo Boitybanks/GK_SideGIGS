@@ -16,6 +16,7 @@ import { QrCode } from '../components/ui/QrCode'
 import { useToast } from '../components/ui/toast'
 import { SharedDocuments } from '../components/profile/Documents'
 import { PortfolioRecord } from '../components/portfolio/PortfolioRecord'
+import { WorkerServices } from '../components/service/WorkerServices'
 import { ReportButton } from '../components/ReportButton'
 import NotFound from './NotFound'
 
@@ -211,6 +212,7 @@ export default function WorkerProfile() {
               </Card>
             )}
             <ProvenSkills stats={s} claimed={p.skills} />
+            <WorkerServices workerId={p.id} first={first} isOwner={isOwner} />
             <section id="experience" aria-labelledby="records-h">
               <h2 id="records-h" className="text-lg font-bold">Recent experience</h2>
               <p className="mb-3 text-sm text-muted">Each record was created by SideGigs when the customer confirmed the job — not self-reported.</p>

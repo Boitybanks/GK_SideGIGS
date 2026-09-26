@@ -68,7 +68,7 @@ export default function MyWork() {
             When a customer chooses you, the job shows up here.
           </EmptyState>
         ) : (
-          <ul className="space-y-3">{current.map((g) => <li key={g.id}><GigRow gig={g} note={g.status === 'matched' ? 'tap to start' : g.worker_done_at ? 'waiting for confirmation' : 'mark as done when finished'} /></li>)}</ul>
+          <ul className="space-y-3">{current.map((g) => <li key={g.id}><GigRow gig={g} note={g.status === 'matched' ? (g.service_id ? 'new booking · tap to start' : 'tap to start') : g.worker_done_at ? 'waiting for confirmation' : 'mark as done when finished'} /></li>)}</ul>
         )}
       </section>
 
@@ -80,6 +80,11 @@ export default function MyWork() {
           <ul className="space-y-3">{pending.map((a) => <li key={a.id}><GigRow gig={a.gig!} note={`applied ${timeAgo(a.created_at)}`} /></li>)}</ul>
         )}
       </section>
+
+      <p className="card mb-8 flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+        <span>Let clients book you directly: list a service at the amount you want to receive.</span>
+        <ButtonLink to="/my-services" variant="secondary" size="sm">My services</ButtonLink>
+      </p>
 
       <section aria-labelledby="done-h">
         <div className="mb-3 flex items-center justify-between gap-2">

@@ -3,17 +3,28 @@ import { render, screen } from '@testing-library/react'
 import { FeeBreakdown } from '../src/components/gig/FeeBreakdown'
 
 describe('<FeeBreakdown />', () => {
-  it('shows the customer the job price, the admin fee from the worker’s pay and what the worker receives', () => {
+  it('shows the client what they pay, with VAT and the SideGigs fee inside it — not the provider’s take-home', () => {
     render(<FeeBreakdown payoutCents={50_000} perspective="customer" />)
+    expect(screen.getByText('You pay')).toBeInTheDocument()
     expect(screen.getByText('R500')).toBeInTheDocument()
-    expect(screen.getByText('R75')).toBeInTheDocument()
-    expect(screen.getByText('R425')).toBeInTheDocument()
-    expect(screen.getByText(/from the worker’s pay/)).toBeInTheDocument()
+    expect(screen.getByText('R65.22')).toBeInTheDocument()
+    expect(screen.getByText('R34.78')).toBeInTheDocument()
+    expect(screen.queryByText('R400')).not.toBeInTheDocument()
   })
-  it('tells the worker exactly what they receive', () => {
+  it('tells the provider what they receive after VAT and the fee — not the client’s price', () => {
     render(<FeeBreakdown payoutCents={50_000} perspective="worker" />)
     expect(screen.getByText('You receive')).toBeInTheDocument()
-    expect(screen.getByText('R425')).toBeInTheDocument()
-    expect(screen.getByText(/The job pays R500/)).toBeInTheDocument()
+    expect(screen.getByText('R400')).toBeInTheDocument()
+    expect(screen.getByText(/After 15% VAT \(R65\.22\) and SideGigs’ 8% fee \(R34\.78\)/)).toBeInTheDocument()
+    expect(screen.queryByText('R500')).not.toBeInTheDocument()
+  })
+  it('while posting, previews what the other side will see', () => {
+    const { unmount } = render(<FeeBreakdown payoutCents={50_000} perspective="customer" counterpart />)
+    expect(screen.getByText(/Service providers see/)).toBeInTheDocument()
+    expect(screen.getByText('R400')).toBeInTheDocument()
+    unmount()
+    render(<FeeBreakdown payoutCents={50_000} perspective="worker" counterpart />)
+    expect(screen.getByText(/Clients see/)).toBeInTheDocument()
+    expect(screen.getByText('R500')).toBeInTheDocument()
   })
 })

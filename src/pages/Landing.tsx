@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, Check, ChevronLeft, ChevronRight,
 import { ButtonLink } from '../components/ui'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { DemoButtons } from '../components/DemoButtons'
+import { breakdown, formatRand } from '../lib/money'
 
 const scenes = [
   { src: '/images/photographer.webp', alt: 'Illustrative photographer preparing for a portrait session', title: 'An eye for the moment.', line: 'A skill worth sharing.', category: 'Photography' },
@@ -27,7 +28,7 @@ const journeys = {
     ['Do good work. Build your name.', 'Mark the job done. Once the customer confirms, it becomes a verified work record on your shareable portfolio.'],
   ],
   customer: [
-    ['Tell us what needs doing.', 'Add the task, area, timing and worker payout. See your full total before you publish.'],
+    ['Tell us what needs doing.', 'Add the task, area, timing and your price. See what the worker will receive before you publish.'],
     ['Choose your person.', 'Compare applicants’ skills, completed work and reviews. You decide who gets the job.'],
     ['Confirm a job well done.', 'The worker marks it done; you confirm and leave a review. Your feedback helps their next opportunity.'],
   ],
@@ -78,6 +79,7 @@ function WorkerStories() {
 export default function Landing() {
   const [journey, setJourney] = useState<'worker' | 'customer'>('worker')
   const [amount, setAmount] = useState(500)
+  const example = breakdown(amount * 100)
   return (
     <div className="landing-page">
       <section className="landing-hero page-width">
@@ -96,7 +98,7 @@ export default function Landing() {
         <Link to="/discover?category=tutoring" className="skill-editorial skill-editorial-tutor"><img src="/images/tutor.webp" alt="Illustrative tutor and student sharing a lesson" width="1536" height="1024" /><div><span>01 / SHARE WHAT YOU KNOW</span><h2>A little guidance.<br />A big difference.</h2><p>Explore tutoring <ArrowUpRight size={18} aria-hidden /></p></div></Link>
         <Link to="/discover?category=hair-beauty" className="skill-editorial skill-editorial-beauty"><img src="/images/stylist.webp" alt="Illustrative stylist creating a natural hairstyle" width="1536" height="1024" /><div><span>02 / DO YOUR THING</span><h2>Talent looks<br />good on you.</h2><p>Explore hair & beauty <ArrowUpRight size={18} aria-hidden /></p></div></Link>
       </section>
-      <div className="trust-rail"><div className="page-width"><span><MapPin aria-hidden /> Work close to home</span><span><Wallet aria-hidden /> Keep your full agreed payout</span><span><BadgeCheck aria-hidden /> Every gig builds your reputation</span></div></div>
+      <div className="trust-rail"><div className="page-width"><span><MapPin aria-hidden /> Work close to home</span><span><Wallet aria-hidden /> See exactly what you’ll receive</span><span><BadgeCheck aria-hidden /> Every gig builds your reputation</span></div></div>
       <section className="page-width landing-section" aria-labelledby="categories-title">
         <div className="section-heading"><div><p className="eyebrow">FIND YOUR CORNER</p><h2 id="categories-title">Many skills. <em>More possibilities.</em></h2></div><Link to="/discover" className="text-link">Explore all work <ArrowUpRight size={18} aria-hidden /></Link></div>
         <div className="category-grid">{categories.map((category) => <Link className="category-tile" key={category.slug} to={`/discover?category=${category.slug}`}><CategoryIcon category={category.slug} className="size-7" /><h3>{category.name}</h3><p>{category.detail}</p><ArrowUpRight className="category-arrow" size={17} aria-hidden /></Link>)}</div>
@@ -116,8 +118,8 @@ export default function Landing() {
         <div className="portfolio-copy"><p className="eyebrow">MORE THAN A ONCE-OFF GIG</p><h2>Build a name.<br /><em>Not just an income.</em></h2><p>The lesson that clicked. The portraits they loved. The laptop you brought back to life. It all counts.</p><p>Every customer-confirmed job becomes a verified record of your experience—with reviews and work photos you can share with your next customer.</p><Link to="/workers" className="text-link">See how a portfolio comes together <ArrowUpRight size={19} aria-hidden /></Link><div className="verification-note"><ShieldCheck size={21} aria-hidden /><span>“Verified” means the job was confirmed by its customer. It doesn’t mean an identity or background check.</span></div></div>
       </section>
       <section className="page-width fee-section">
-        <div><p className="eyebrow">STRAIGHTFORWARD FROM THE START</p><h2>Your skills.<br />Clear, fair pay.</h2><p>Free to join. The customer pays the agreed price, and a clearly shown 15% admin fee comes out of the worker’s pay.</p><Link to="/trust" className="text-link">How trust & safety works <ArrowUpRight size={17} aria-hidden /></Link></div>
-        <div className="fee-example"><div className="flex items-center justify-between"><span className="text-sm font-semibold">Try the numbers</span><span className="example-badge">ILLUSTRATIVE EXAMPLE</span></div><div className="fee-choices" role="group" aria-label="Example job price">{[200, 500, 1000].map((value) => <button key={value} type="button" aria-pressed={amount === value} onClick={() => setAmount(value)}>R{value.toLocaleString('en-ZA')}</button>)}</div><dl><div><dt>Customer pays</dt><dd>R{amount.toLocaleString('en-ZA')}</dd></div><div><dt>Admin fee <span>(15%)</span></dt><dd>R{(amount * 0.15).toLocaleString('en-ZA')}</dd></div><div className="fee-total"><dt>Worker receives</dt><dd>R{(amount * 0.85).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</dd></div></dl><p><ShieldCheck size={15} aria-hidden /> Payment simulation · no charges or transfers</p></div>
+        <div><p className="eyebrow">STRAIGHTFORWARD FROM THE START</p><h2>Your skills.<br />Clear, fair pay.</h2><p>Free to join. Prices include 15% VAT, and SideGigs’ 8% fee comes out before the money reaches the worker. Each side sees its own number: the customer what they pay, the worker what they receive.</p><Link to="/trust" className="text-link">How trust & safety works <ArrowUpRight size={17} aria-hidden /></Link></div>
+        <div className="fee-example"><div className="flex items-center justify-between"><span className="text-sm font-semibold">Try the numbers</span><span className="example-badge">ILLUSTRATIVE EXAMPLE</span></div><div className="fee-choices" role="group" aria-label="Example job price">{[200, 500, 1000].map((value) => <button key={value} type="button" aria-pressed={amount === value} onClick={() => setAmount(value)}>R{value.toLocaleString('en-ZA')}</button>)}</div><dl><div><dt>Customer pays</dt><dd>{formatRand(example.price)}</dd></div><div><dt>VAT <span>(15%, included)</span></dt><dd>{formatRand(example.vat)}</dd></div><div><dt>SideGigs fee <span>(8%)</span></dt><dd>{formatRand(example.fee)}</dd></div><div className="fee-total"><dt>Worker receives</dt><dd>{formatRand(example.workerNet)}</dd></div></dl><p><ShieldCheck size={15} aria-hidden /> Payment simulation · no charges or transfers</p></div>
       </section>
       <section className="page-width final-invite"><div><p className="eyebrow">BIG POTENTIAL. RIGHT AROUND THE CORNER.</p><h2>Your next opportunity<br />could be next door.</h2></div><div><ButtonLink to="/discover" size="lg" variant="sun">Find your next gig <ArrowUpRight size={19} aria-hidden /></ButtonLink><Link to="/signup?role=customer&next=%2Fgigs%2Fnew" className="text-link">Need something done? Post a task <ArrowRight size={16} aria-hidden /></Link></div></section>
       <section className="page-width demo-entry" aria-label="Try the demonstration"><div><p className="font-semibold">Take SideGigs for a spin.</p><p className="mt-1 text-sm text-muted">Explore either side with a labelled demo account. No payment details needed.</p></div><DemoButtons /></section>

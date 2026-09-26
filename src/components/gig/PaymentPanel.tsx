@@ -22,12 +22,12 @@ export function PaymentPanel({ txn, perspective }: { txn: Transaction; perspecti
       {perspective === 'customer' ? (
         <dl className="mt-3 space-y-1 text-sm">
           <div className="flex justify-between"><dt className="font-bold">You pay</dt><dd className="font-extrabold">{formatRand(txn.total_cents)}</dd></div>
-          <div className="flex justify-between"><dt>Admin fee (from the worker’s pay)</dt><dd className="font-semibold">{formatRand(txn.fee_cents)}</dd></div>
-          <div className="flex justify-between border-t border-line pt-1"><dt>Worker receives</dt><dd className="font-semibold">{formatRand(txn.payout_cents)}</dd></div>
+          <div className="flex justify-between text-muted"><dt>Includes VAT</dt><dd>{formatRand(txn.vat_cents)}</dd></div>
+          <div className="flex justify-between text-muted"><dt>Includes SideGigs fee</dt><dd>{formatRand(txn.fee_cents)}</dd></div>
         </dl>
       ) : (
         <p className="mt-3 text-sm">
-          You receive <strong className="text-brand-700">{formatRand(txn.payout_cents)}</strong> after the {formatRand(txn.fee_cents)} admin fee
+          You receive <strong className="text-brand-700">{formatRand(txn.payout_cents)}</strong> after VAT ({formatRand(txn.vat_cents)}) and the SideGigs fee ({formatRand(txn.fee_cents)})
           {txn.status === 'held' && ' — paid out when the customer confirms the job is done.'}
           {txn.status === 'released' && ' — released.'}
           {txn.status === 'refunded' && ' — the gig was cancelled.'}

@@ -24,6 +24,15 @@ describe('gig lifecycle rules (UI mirror of the RPCs)', () => {
     const g = { ...base, assigned_worker_id: 'w', status: 'matched' as const }
     expect(allowedActions(g, 'assigned_worker')).toContain('start')
     expect(allowedActions(g, 'customer')).toEqual(['cancel', 'reveal_contact'])
+    expect(allowedActions(g, 'assigned_worker')).not.toContain('decline_booking')
+  })
+  it('booked service → the provider can decline until they start; the client can still cancel', () => {
+    const g = { ...base, assigned_worker_id: 'w', service_id: 's', status: 'matched' as const }
+    expect(allowedActions(g, 'assigned_worker')).toEqual(['start', 'reveal_contact', 'decline_booking'])
+    expect(allowedActions(g, 'customer')).toEqual(['cancel', 'reveal_contact'])
+    expect(allowedActions({ ...g, status: 'in_progress' }, 'assigned_worker')).not.toContain('decline_booking')
+    expect(nextStepText(g, 'assigned_worker')).toMatch(/New booking/)
+    expect(nextStepText(g, 'customer')).toMatch(/Booked!/)
   })
   it('in progress → worker marks done once; customer cannot cancel', () => {
     const g = { ...base, assigned_worker_id: 'w', status: 'in_progress' as const }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, gigSchema, phoneSchema, signupSchema, validateEvidenceFile } from '../src/lib/validation'
+import { addDays, bookingSchema, gigSchema, phoneSchema, serviceSchema, signupSchema, validateEvidenceFile } from '../src/lib/validation'
 
 const today = '2026-09-26'
 const valid = {
@@ -21,6 +21,21 @@ describe('gig validation', () => {
     expect(gigSchema(today).safeParse({ ...valid, payout_cents: 4_999 }).success).toBe(false)
     expect(gigSchema(today).safeParse({ ...valid, description: 'too short' }).success).toBe(false)
     expect(gigSchema(today).safeParse({ ...valid, category: 'crypto-trading' }).success).toBe(false)
+  })
+})
+
+describe('service and booking validation', () => {
+  const service = { title: 'Paint one interior room', category: 'painting', description: 'Two coats, I bring rollers and drop sheets.', area_slug: 'soweto', take_home_cents: 40_000 }
+  it('prices a service by what the provider receives: R40 to R40 000', () => {
+    expect(serviceSchema.safeParse(service).success).toBe(true)
+    expect(serviceSchema.safeParse({ ...service, take_home_cents: 3_999 }).success).toBe(false)
+    expect(serviceSchema.safeParse({ ...service, take_home_cents: 4_000_001 }).success).toBe(false)
+  })
+  it('books a date, area and time without re-describing the job', () => {
+    const booking = { area_slug: 'soweto', scheduled_date: addDays(today, 1), time_window: 'flexible' }
+    expect(bookingSchema(today).safeParse(booking).success).toBe(true)
+    expect(bookingSchema(today).safeParse({ ...booking, scheduled_date: '2026-09-25' }).success).toBe(false)
+    expect(bookingSchema(today).safeParse({ ...booking, area_slug: '' }).success).toBe(false)
   })
 })
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, ClipboardList, Plus, Users } from 'lucide-react'
+import { ChevronRight, ClipboardList, Plus, Store, Users } from 'lucide-react'
 import { fetchPostedGigs } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { categoryEmoji } from '../lib/categories'
@@ -24,8 +24,13 @@ export default function MyGigs() {
     <div>
       <PageHeader
         title={`Sawubona, ${profile?.display_name.split(' ')[0] ?? 'there'}`}
-        subtitle={needsAction ? `${needsAction} gig${needsAction > 1 ? 's need' : ' needs'} your attention.` : 'Your posted gigs and their progress.'}
-        action={<ButtonLink to="/gigs/new"><Plus className="size-4" aria-hidden /> Post a gig</ButtonLink>}
+        subtitle={needsAction ? `${needsAction} gig${needsAction > 1 ? 's need' : ' needs'} your attention.` : 'Your posted gigs, booked services and their progress.'}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink to="/services" variant="secondary"><Store className="size-4" aria-hidden /> Book a service</ButtonLink>
+            <ButtonLink to="/gigs/new"><Plus className="size-4" aria-hidden /> Post a gig</ButtonLink>
+          </div>
+        }
       />
       <div role="tablist" aria-label="Gig list" className="mb-4 inline-flex rounded-xl bg-white p-1 ring-1 ring-line">
         {(['active', 'past'] as const).map((t) => (
@@ -56,7 +61,8 @@ export default function MyGigs() {
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                     <StatusPill status={g.status} />
                     <span>{formatDay(g.scheduled_date)}</span>
-                    <span>· {formatRand(g.total_cents)} total</span>
+                    <span>· you pay {formatRand(g.total_cents)}</span>
+                    {g.service_id && <span className="font-semibold text-sky-800">· Booked service</span>}
                     {g.status === 'open' && (
                       <span className={`inline-flex items-center gap-1 font-semibold ${g.applicant_count ? 'text-clay-600' : ''}`}>
                         <Users className="size-3.5" aria-hidden /> {g.applicant_count} applied

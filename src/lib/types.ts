@@ -49,9 +49,11 @@ export interface Gig {
   scheduled_date: string
   time_window: TimeWindow
   payout_cents: number
+  vat_cents: number
   fee_cents: number
   total_cents: number
   worker_net_cents: number
+  service_id: string | null
   status: GigStatus
   assigned_worker_id: string | null
   is_demo: boolean
@@ -83,6 +85,44 @@ export interface DiscoverGig {
   distance_km: number | null
 }
 
+/** A provider's own listing: they priced it by what they take home. Only the owner reads take_home_cents. */
+export interface Service {
+  id: string
+  worker_id: string
+  title: string
+  category: string
+  description: string
+  area_slug: string
+  take_home_cents: number
+  price_cents: number
+  is_active: boolean
+  is_demo: boolean
+  created_at: string
+}
+
+/** What clients browse: the price they pay, never the provider's take-home. */
+export interface DiscoverService {
+  id: string
+  title: string
+  category: string
+  description: string
+  area_slug: string
+  area_name: string
+  city: string
+  price_cents: number
+  created_at: string
+  is_demo: boolean
+  worker_id: string
+  worker_name: string
+  worker_headline: string | null
+  worker_avatar_path: string | null
+  worker_is_demo: boolean
+  completed: number
+  avg_rating: number | null
+  review_count: number
+  distance_km: number | null
+}
+
 export interface Application {
   id: string
   gig_id: string
@@ -96,6 +136,7 @@ export interface Transaction {
   id: string
   gig_id: string
   payout_cents: number
+  vat_cents: number
   fee_cents: number
   total_cents: number
   status: TxnStatus

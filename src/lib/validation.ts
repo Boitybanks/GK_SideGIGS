@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CATEGORIES } from './categories'
-import { MAX_PAYOUT_CENTS, MIN_PAYOUT_CENTS } from './money'
+import { MAX_PAYOUT_CENTS, MAX_TAKE_HOME_CENTS, MIN_PAYOUT_CENTS, MIN_TAKE_HOME_CENTS } from './money'
 
 const categorySlugs = CATEGORIES.map((c) => c.slug) as [string, ...string[]]
 
@@ -45,6 +45,21 @@ export const phoneSchema = z
   .transform((v) => v.replace(/[\s()-]/g, ''))
   .refine((v) => /^(\+27|0)[1-8]\d{8}$/.test(v), 'Enter a South African number, e.g. 071 234 5678.')
 
+// When and where a job happens, plus the encrypted private details. Shared by posting a gig and booking a service.
+function scheduleFields(today: string) {
+  return {
+    area_slug: z.string().min(1, 'Choose the area where the work happens.'),
+    scheduled_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a date.')
+      .refine((d) => d >= today, 'Choose today or a future date.')
+      .refine((d) => d <= addDays(today, 180), 'Choose a date within the next 6 months.'),
+    time_window: z.enum(['morning', 'afternoon', 'evening', 'flexible']),
+    address: z.string().trim().max(200, 'Keep the address under 200 characters.').optional().or(z.literal('')),
+    access_notes: z.string().trim().max(300, 'Keep notes under 300 characters.').optional().or(z.literal('')),
+  }
+}
+
 export function gigSchema(today = todayInSA()) {
   return z.object({
     title: z.string().trim().min(5, 'Give your gig a short title (at least 5 characters).').max(80, 'Keep the title under 80 characters.'),
@@ -54,23 +69,38 @@ export function gigSchema(today = todayInSA()) {
       .trim()
       .min(20, 'Describe the work in at least 20 characters so workers know what to expect.')
       .max(1000, 'Keep the description under 1000 characters.'),
-    area_slug: z.string().min(1, 'Choose the area where the work happens.'),
-    scheduled_date: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a date.')
-      .refine((d) => d >= today, 'Choose today or a future date.')
-      .refine((d) => d <= addDays(today, 180), 'Choose a date within the next 6 months.'),
-    time_window: z.enum(['morning', 'afternoon', 'evening', 'flexible']),
     payout_cents: z
       .number({ message: 'Enter what you will pay for the job.' })
       .int()
-      .min(MIN_PAYOUT_CENTS, 'The minimum payout is R50.')
-      .max(MAX_PAYOUT_CENTS, 'The maximum payout is R50 000.'),
-    address: z.string().trim().max(200, 'Keep the address under 200 characters.').optional().or(z.literal('')),
-    access_notes: z.string().trim().max(300, 'Keep notes under 300 characters.').optional().or(z.literal('')),
+      .min(MIN_PAYOUT_CENTS, 'The minimum price is R50.')
+      .max(MAX_PAYOUT_CENTS, 'The maximum price is R50 000.'),
+    ...scheduleFields(today),
   })
 }
 export type GigInput = z.infer<ReturnType<typeof gigSchema>>
+
+/** A provider lists a service at the amount they want to receive; clients are shown the price including VAT and the fee. */
+export const serviceSchema = z.object({
+  title: z.string().trim().min(5, 'Give your service a short title (at least 5 characters).').max(80, 'Keep the title under 80 characters.'),
+  category: z.enum(categorySlugs, { message: 'Choose a category.' }),
+  description: z
+    .string()
+    .trim()
+    .min(20, 'Describe the service in at least 20 characters so clients know what they get.')
+    .max(1000, 'Keep the description under 1000 characters.'),
+  area_slug: z.string().min(1, 'Choose the area you work in.'),
+  take_home_cents: z
+    .number({ message: 'Enter what you want to receive for this service.' })
+    .int()
+    .min(MIN_TAKE_HOME_CENTS, 'The minimum you can receive is R40.')
+    .max(MAX_TAKE_HOME_CENTS, 'The maximum you can receive is R40 000.'),
+})
+export type ServiceInput = z.infer<typeof serviceSchema>
+
+export function bookingSchema(today = todayInSA()) {
+  return z.object(scheduleFields(today))
+}
+export type BookingInput = z.infer<ReturnType<typeof bookingSchema>>
 
 export const reviewSchema = z.object({
   rating: z.number().int().min(1, 'Choose a star rating.').max(5),

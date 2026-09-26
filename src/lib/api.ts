@@ -6,6 +6,7 @@ import type {
   Application,
   Area,
   DiscoverGig,
+  DiscoverService,
   DiscoverWorker,
   Gig,
   GigEvent,
@@ -16,10 +17,11 @@ import type {
   ProfileDocument,
   RevealedContact,
   Review,
+  Service,
   Transaction,
   WorkerStats,
 } from './types'
-import type { GigInput, SignupInput } from './validation'
+import type { BookingInput, GigInput, ServiceInput, SignupInput } from './validation'
 import type { Gender, IdentityInput } from './identity'
 import type { HandshakeStep } from './qr-scan'
 import { validateEvidenceFile, validatePdf } from './validation'
@@ -137,14 +139,16 @@ export async function fetchGig(id: string): Promise<GigWithPeople | null> {
   )
 }
 
-export async function createGig(input: GigInput): Promise<string> {
-  const id = crypto.randomUUID()
+/** The street address and access notes are encrypted in the browser, bound to the gig id. */
+async function encryptGigPrivate(gigId: string, input: { address?: string; access_notes?: string }) {
   const address = input.address?.trim()
   const notes = input.access_notes?.trim()
-  const envelope =
-    address || notes
-      ? await encryptForVault({ address: address || null, access_notes: notes || null }, gigAad(id))
-      : null
+  return address || notes ? await encryptForVault({ address: address || null, access_notes: notes || null }, gigAad(gigId)) : null
+}
+
+export async function createGig(input: GigInput): Promise<string> {
+  const id = crypto.randomUUID()
+  const envelope = await encryptGigPrivate(id, input)
   return rpc<string>('create_gig', {
     p_id: id,
     p_title: input.title,
@@ -226,6 +230,73 @@ export async function fetchMyApplications(userId: string): Promise<ApplicationWi
       .order('created_at', { ascending: false }),
   )
 }
+
+// ── Services (a provider prices by what they take home; clients see what they pay) ──
+export async function discoverServices(params: {
+  area?: string | null
+  category?: string | null
+  worker?: string | null
+  page: number
+}): Promise<DiscoverService[]> {
+  return rpc<DiscoverService[]>('discover_services', {
+    p_area: params.area ?? null,
+    p_category: params.category ?? null,
+    p_worker: params.worker ?? null,
+    p_limit: PAGE_SIZE,
+    p_offset: params.page * PAGE_SIZE,
+  })
+}
+
+export type ServiceWithWorker = Omit<Service, 'take_home_cents'> & {
+  worker: Pick<Profile, 'id' | 'display_name' | 'headline' | 'avatar_path' | 'is_demo' | 'area_slug'> | null
+}
+
+/** Client view of one service: the price they pay, not the provider's take-home. */
+export async function fetchService(id: string): Promise<ServiceWithWorker | null> {
+  return must(
+    await supabase
+      .from('services')
+      .select('id, worker_id, title, category, description, area_slug, price_cents, is_active, is_demo, created_at, worker:profiles(id, display_name, headline, avatar_path, is_demo, area_slug)')
+      .eq('id', id)
+      .maybeSingle(),
+  )
+}
+
+/** The provider's own listings, paused ones included, with what they take home. */
+export async function fetchMyServices(userId: string): Promise<Service[]> {
+  return must(await supabase.from('services').select('*').eq('worker_id', userId).order('created_at', { ascending: false }))
+}
+
+export async function fetchMyService(id: string, userId: string): Promise<Service | null> {
+  return must(await supabase.from('services').select('*').eq('id', id).eq('worker_id', userId).maybeSingle())
+}
+
+/** Creates the service when `id` is null, otherwise edits it. */
+export const saveService = (id: string | null, input: ServiceInput) =>
+  rpc<string>('save_service', {
+    p_id: id,
+    p_title: input.title,
+    p_category: input.category,
+    p_description: input.description,
+    p_area: input.area_slug,
+    p_take_home_cents: input.take_home_cents,
+  })
+export const setServiceActive = (id: string, active: boolean) => rpc<void>('set_service_active', { p_service: id, p_active: active })
+
+/** Booking matches the provider straight away and holds the simulated payment. Returns the new gig id. */
+export async function bookService(serviceId: string, input: BookingInput): Promise<string> {
+  const id = crypto.randomUUID()
+  const envelope = await encryptGigPrivate(id, input)
+  return rpc<string>('book_service', {
+    p_id: id,
+    p_service: serviceId,
+    p_area: input.area_slug,
+    p_date: input.scheduled_date,
+    p_time_window: input.time_window,
+    p_envelope: envelope,
+  })
+}
+export const declineBooking = (gigId: string) => rpc<void>('decline_booking', { p_gig: gigId })
 
 // ── Lifecycle (RPCs enforce roles and states) ─────────────────────────────
 export const applyToGig = (gigId: string, message: string) => rpc<string>('apply_to_gig', { p_gig: gigId, p_message: message })

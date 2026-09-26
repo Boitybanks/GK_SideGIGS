@@ -29,6 +29,7 @@ export type GigAction =
   | 'confirm_completion'
   | 'review'
   | 'cancel'
+  | 'decline_booking'
   | 'reveal_contact'
 
 interface Context {
@@ -38,7 +39,7 @@ interface Context {
 }
 
 export function allowedActions(
-  gig: Pick<Gig, 'status' | 'worker_done_at' | 'customer_id' | 'assigned_worker_id'>,
+  gig: Pick<Gig, 'status' | 'worker_done_at' | 'customer_id' | 'assigned_worker_id'> & { service_id?: string | null },
   viewer: Viewer,
   ctx: Context = {},
 ): GigAction[] {
@@ -57,7 +58,11 @@ export function allowedActions(
       }
       break
     case 'assigned_worker':
-      if (gig.status === 'matched') actions.push('start', 'reveal_contact')
+      if (gig.status === 'matched') {
+        actions.push('start', 'reveal_contact')
+        // A booked service skipped the application step, so the provider can still turn it down before starting.
+        if (gig.service_id) actions.push('decline_booking')
+      }
       if (gig.status === 'in_progress') {
         if (!gig.worker_done_at) actions.push('mark_done')
         actions.push('reveal_contact')
@@ -78,20 +83,24 @@ export function allowedActions(
 }
 
 /** Plain-language next step, shown at the top of the gig page. */
-export function nextStepText(gig: Pick<Gig, 'status' | 'worker_done_at'>, viewer: Viewer): string {
+export function nextStepText(gig: Pick<Gig, 'status' | 'worker_done_at'> & { service_id?: string | null }, viewer: Viewer): string {
   if (gig.status === 'cancelled') return 'This gig was cancelled.'
   if (gig.status === 'completed') return viewer === 'assigned_worker'
     ? 'Done! This job is now a verified record on your portfolio.'
     : 'This gig is complete.'
   if (viewer === 'customer') {
     if (gig.status === 'open') return 'Review the people who applied and choose one.'
-    if (gig.status === 'matched') return 'Your worker is confirmed. When they arrive, open “Job QR codes” and show them the start-job code.'
+    if (gig.status === 'matched') return gig.service_id
+      ? 'Booked! When your service provider arrives, open “Job QR codes” and show them the start-job code.'
+      : 'Your worker is confirmed. When they arrive, open “Job QR codes” and show them the start-job code.'
     return gig.worker_done_at
       ? 'Your worker says the job is done. Check it and confirm completion.'
       : 'Work is in progress. When it’s finished, show your worker the finish-job QR code, then confirm completion.'
   }
   if (viewer === 'assigned_worker') {
-    if (gig.status === 'matched') return 'You got the job! When you arrive, tap “Start job” and scan the customer’s start-job QR code.'
+    if (gig.status === 'matched') return gig.service_id
+      ? 'New booking for your service! When you arrive, tap “Start job” and scan the customer’s start-job QR code. Can’t make it? Decline below.'
+      : 'You got the job! When you arrive, tap “Start job” and scan the customer’s start-job QR code.'
     return gig.worker_done_at
       ? 'Waiting for the customer to confirm completion.'
       : 'When you finish, tap “Mark as done” and scan the customer’s finish-job QR code.'

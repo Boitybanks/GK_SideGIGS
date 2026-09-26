@@ -1,7 +1,14 @@
-import { breakdown, formatRand, FEE_RATE_PERCENT } from '../../lib/money'
+import { breakdown, formatRand, FEE_RATE_PERCENT, VAT_RATE_PERCENT } from '../../lib/money'
 
-/** Customer view: you pay the job price; the admin fee comes out of the worker's share. Worker view: what you receive. */
-export function FeeBreakdown({ payoutCents, perspective }: { payoutCents: number; perspective: 'customer' | 'worker' }) {
+/**
+ * Each side sees its own number. Client: what you pay, with VAT and the SideGigs fee inside it.
+ * Provider: what you receive after VAT and the fee. `counterpart` (used while posting) previews what the other side sees.
+ */
+export function FeeBreakdown({ payoutCents, perspective, counterpart = false }: {
+  payoutCents: number
+  perspective: 'customer' | 'worker'
+  counterpart?: boolean
+}) {
   const b = breakdown(payoutCents)
   if (perspective === 'worker') {
     return (
@@ -9,8 +16,14 @@ export function FeeBreakdown({ payoutCents, perspective }: { payoutCents: number
         <p className="text-sm font-semibold text-brand-800">You receive</p>
         <p className="text-3xl font-extrabold text-brand-800">{formatRand(b.workerNet)}</p>
         <p className="mt-1 text-xs text-brand-800/80">
-          The job pays {formatRand(b.price)}. SideGigs’ {FEE_RATE_PERCENT}% admin fee ({formatRand(b.fee)}) comes out of that.
+          After {VAT_RATE_PERCENT}% VAT ({formatRand(b.vat)}) and SideGigs’ {FEE_RATE_PERCENT}% fee ({formatRand(b.fee)}).
         </p>
+        {counterpart && (
+          <p className="mt-3 flex items-baseline justify-between gap-3 border-t border-brand-100 pt-3 text-sm text-brand-800">
+            <span>Clients see <span className="text-xs text-brand-800/80">(incl. VAT and the SideGigs fee)</span></span>
+            <strong className="shrink-0">{formatRand(b.price)}</strong>
+          </p>
+        )}
       </div>
     )
   }
@@ -20,14 +33,20 @@ export function FeeBreakdown({ payoutCents, perspective }: { payoutCents: number
         <dt className="font-bold">You pay</dt>
         <dd className="font-extrabold">{formatRand(b.price)}</dd>
       </div>
-      <div className="flex justify-between">
-        <dt>SideGigs admin fee ({FEE_RATE_PERCENT}%, from the worker’s pay)</dt>
-        <dd className="font-semibold">{formatRand(b.fee)}</dd>
+      <div className="flex justify-between text-muted">
+        <dt>Includes VAT ({VAT_RATE_PERCENT}%)</dt>
+        <dd>{formatRand(b.vat)}</dd>
       </div>
-      <div className="flex justify-between border-t border-line pt-2">
-        <dt>Worker receives</dt>
-        <dd className="font-semibold">{formatRand(b.workerNet)}</dd>
+      <div className="flex justify-between text-muted">
+        <dt>Includes SideGigs fee ({FEE_RATE_PERCENT}%)</dt>
+        <dd>{formatRand(b.fee)}</dd>
       </div>
+      {counterpart && (
+        <div className="flex justify-between gap-3 border-t border-line pt-2">
+          <dt>Service providers see <span className="text-xs text-muted">(after VAT and the fee)</span></dt>
+          <dd className="shrink-0 font-semibold">{formatRand(b.workerNet)}</dd>
+        </div>
+      )}
     </dl>
   )
 }

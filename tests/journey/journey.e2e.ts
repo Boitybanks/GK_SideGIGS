@@ -69,7 +69,7 @@ describe('SideGigs P0 journey (live database)', () => {
     expect(badId.error?.message).toMatch(/checksum/)
   })
 
-  it('POST GIG: customer posts with post-quantum-encrypted address; fee is computed by the database', async () => {
+  it('POST GIG: customer posts with post-quantum-encrypted address; VAT and fee are computed by the database', async () => {
     const envelope = await encryptEnvelope({ address, access_notes: 'Green gate' }, gigAad(gigId), {
       publicKey: fromBase64(KEM_PUBLIC_KEY_B64),
       kid: KEM_KID,
@@ -81,7 +81,7 @@ describe('SideGigs P0 journey (live database)', () => {
     }))
     expect(id).toBe(gigId)
     const gig = await ok(customer.c.from('gigs').select('*').eq('id', gigId).single())
-    expect(gig).toMatchObject({ status: 'open', payout_cents: 50000, fee_cents: 7500, total_cents: 50000, worker_net_cents: 42500, is_demo: true })
+    expect(gig).toMatchObject({ status: 'open', payout_cents: 50000, vat_cents: 6522, fee_cents: 3478, total_cents: 50000, worker_net_cents: 40000, service_id: null, is_demo: true })
     const stored = await ok(customer.c.from('gig_private').select('envelope').eq('gig_id', gigId).single())
     expect(JSON.stringify(stored)).not.toContain('Vilakazi')
   })
@@ -112,8 +112,8 @@ describe('SideGigs P0 journey (live database)', () => {
     await ok(customer.c.rpc('select_worker', { p_gig: gigId, p_application: app.id }))
     const gig = await ok(customer.c.from('gigs').select('status, assigned_worker_id').eq('id', gigId).single())
     expect(gig).toEqual({ status: 'matched', assigned_worker_id: worker.uid })
-    const txn = await ok(worker.c.from('transactions').select('status, mode, total_cents, payout_cents').eq('gig_id', gigId).single())
-    expect(txn).toEqual({ status: 'held', mode: 'simulation', total_cents: 50000, payout_cents: 42500 })
+    const txn = await ok(worker.c.from('transactions').select('status, mode, total_cents, vat_cents, fee_cents, payout_cents').eq('gig_id', gigId).single())
+    expect(txn).toEqual({ status: 'held', mode: 'simulation', total_cents: 50000, vat_cents: 6522, fee_cents: 3478, payout_cents: 40000 })
   })
 
   it('PRIVACY: the chosen worker can now read the envelope, which decrypts to the real address', async () => {
@@ -186,6 +186,41 @@ describe('SideGigs P0 journey (live database)', () => {
     expect(events.map((e) => e.kind)).toEqual([
       'posted', 'applied', 'matched', 'payment_held', 'started', 'worker_done', 'completed', 'payment_released', 'portfolio_record', 'reviewed',
     ])
+  })
+
+  it('SERVICE: provider prices by take-home; clients see the VAT-inclusive price; booking matches at once', async () => {
+    const serviceId = await ok(worker.c.rpc('save_service', {
+      p_id: null, p_title: 'Journey test: fix a door hinge', p_category: 'repairs',
+      p_description: 'Automated journey test service listing. Hinges and handles.', p_area: 'soweto', p_take_home_cents: 40000,
+    }))
+    const own = await ok(worker.c.from('services').select('take_home_cents, price_cents, is_demo').eq('id', serviceId).single())
+    expect(own).toEqual({ take_home_cents: 40000, price_cents: 50000, is_demo: true })
+    const listed = (await ok(anon.rpc('discover_services', { p_worker: worker.uid, p_limit: 50 }))) as Record<string, unknown>[]
+    const card = listed.find((s) => s.id === serviceId)
+    expect(card?.price_cents).toBe(50000)
+    expect(card).not.toHaveProperty('take_home_cents')
+
+    const booking = { p_id: null, p_service: serviceId, p_area: 'soweto', p_date: inDays(3), p_time_window: 'morning', p_envelope: null }
+    expect((await worker.c.rpc('book_service', booking)).error?.message).toMatch(/own service/)
+    const bookedId = await ok(customer.c.rpc('book_service', booking))
+    const gig = await ok(customer.c.from('gigs')
+      .select('status, assigned_worker_id, service_id, total_cents, vat_cents, fee_cents, worker_net_cents').eq('id', bookedId).single())
+    expect(gig).toEqual({ status: 'matched', assigned_worker_id: worker.uid, service_id: serviceId, total_cents: 50000, vat_cents: 6522, fee_cents: 3478, worker_net_cents: 40000 })
+    const txn = await ok(worker.c.from('transactions').select('status, total_cents, payout_cents').eq('gig_id', bookedId).single())
+    expect(txn).toEqual({ status: 'held', total_cents: 50000, payout_cents: 40000 })
+    expect(await ok(customer.c.from('gig_handshakes').select('step').eq('gig_id', bookedId))).toHaveLength(2)
+
+    expect((await customer.c.rpc('decline_booking', { p_gig: bookedId })).error).toBeTruthy()
+    await ok(worker.c.rpc('decline_booking', { p_gig: bookedId }))
+    const declined = await ok(customer.c.from('gigs').select('status').eq('id', bookedId).single())
+    expect(declined.status).toBe('cancelled')
+    const refunded = await ok(customer.c.from('transactions').select('status').eq('gig_id', bookedId).single())
+    expect(refunded.status).toBe('refunded')
+
+    await ok(worker.c.rpc('set_service_active', { p_service: serviceId, p_active: false }))
+    expect((await ok(anon.from('services').select('id').eq('id', serviceId)))).toHaveLength(0)
+    expect((await customer.c.rpc('book_service', booking)).error?.message).toMatch(/no longer available/)
+    expect((await worker.c.from('services').update({ take_home_cents: 1 }).eq('id', serviceId)).error).toBeTruthy()
   })
 
   it('CANCEL: an open gig can be cancelled by its customer', async () => {
