@@ -13,6 +13,7 @@ import { AreaSelect } from '../components/AreaSelect'
 import { useToast } from '../components/ui/toast'
 import { ProfilePhoto } from '../components/profile/ProfilePhoto'
 import { DocumentsManager } from '../components/profile/Documents'
+import { IdentityCard } from '../components/identity/IdentityCard'
 import { safeNext } from '../lib/navigation'
 
 export default function Profile() {
@@ -183,6 +184,7 @@ function ProfileForm() {
         </Card>
       )}
 
+      {!isSetup && userId && profile && <IdentityCard userId={userId} displayName={profile.display_name} readOnly={readOnly} />}
       {!isSetup && userId && <DocumentsManager userId={userId} readOnly={readOnly} />}
 
       <Card className="mt-6 p-5">

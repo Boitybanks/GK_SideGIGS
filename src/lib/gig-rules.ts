@@ -85,16 +85,16 @@ export function nextStepText(gig: Pick<Gig, 'status' | 'worker_done_at'>, viewer
     : 'This gig is complete.'
   if (viewer === 'customer') {
     if (gig.status === 'open') return 'Review the people who applied and choose one.'
-    if (gig.status === 'matched') return 'Your worker is confirmed. They will tap “Start job” when they begin.'
+    if (gig.status === 'matched') return 'Your worker is confirmed. When they arrive, open “Job QR codes” and show them the start-job code.'
     return gig.worker_done_at
       ? 'Your worker says the job is done. Check it and confirm completion.'
-      : 'Work is in progress. You can confirm once the worker marks it as done.'
+      : 'Work is in progress. When it’s finished, show your worker the finish-job QR code, then confirm completion.'
   }
   if (viewer === 'assigned_worker') {
-    if (gig.status === 'matched') return 'You got the job! Tap “Start job” when you begin.'
+    if (gig.status === 'matched') return 'You got the job! When you arrive, tap “Start job” and scan the customer’s start-job QR code.'
     return gig.worker_done_at
       ? 'Waiting for the customer to confirm completion.'
-      : 'Tap “Mark as done” when you finish so the customer can confirm.'
+      : 'When you finish, tap “Mark as done” and scan the customer’s finish-job QR code.'
   }
   if (gig.status === 'open') return 'Apply to let the customer know you can do this.'
   return 'This gig has been filled.'

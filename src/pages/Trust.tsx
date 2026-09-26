@@ -1,4 +1,4 @@
-import { BadgeCheck, EyeOff, FileText, Fingerprint, Flag, KeyRound, Lock, ShieldCheck, Wallet } from 'lucide-react'
+import { BadgeCheck, EyeOff, FileText, Fingerprint, Flag, IdCard, KeyRound, Lock, ScanLine, ShieldCheck, Wallet } from 'lucide-react'
 import { ButtonLink, Card, PageHeader } from '../components/ui'
 
 const sections = [
@@ -31,6 +31,16 @@ const sections = [
     icon: Wallet,
     title: 'Payments are simulated in this version',
     body: 'The hackathon build shows how SideGigs protection will work (held → released or refunded) but moves no real money. It is not a regulated escrow service.',
+  },
+  {
+    icon: ScanLine,
+    title: 'Jobs start and finish in person',
+    body: 'The customer shows a one-time QR code when the worker arrives and another when the work is done. The worker scans each one to start and to finish the job, so both sides know the work really happened on site.',
+  },
+  {
+    icon: IdCard,
+    title: 'Your ID number and home address stay private',
+    body: 'Everyone gives an SA ID number, the name on their ID, their gender and their home address when they sign up. The ID number, name and address are encrypted on your device before they are saved and are never shown on a profile. SideGigs checks that an ID number is correctly formed; it does not check it with Home Affairs.',
   },
   {
     icon: Fingerprint,

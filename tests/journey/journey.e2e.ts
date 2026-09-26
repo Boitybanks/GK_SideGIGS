@@ -60,10 +60,13 @@ describe('SideGigs P0 journey (live database)', () => {
   it('AUTH: rejects a wrong password and weak sign-up input', async () => {
     const { error } = await client().auth.signInWithPassword({ email: 'demo.worker@sidegigs.app', password: 'wrong-password' })
     expect(error).toBeTruthy()
-    const bad = await anon.rpc('create_account', { p_email: 'not-an-email', p_password: 'x', p_display_name: 'A', p_role: 'worker', p_area: 'soweto' })
+    const identity = { p_id: crypto.randomUUID(), p_id_number: '8001015009087', p_gender: 'male', p_identity_envelope: {}, p_address_envelope: {} }
+    const bad = await anon.rpc('create_account', { ...identity, p_email: 'not-an-email', p_password: 'x', p_display_name: 'A', p_role: 'worker', p_area: 'soweto' })
     expect(bad.error?.message).toMatch(/valid email/)
-    const dup = await anon.rpc('create_account', { p_email: 'demo.worker@sidegigs.app', p_password: 'longenough1', p_display_name: 'Dup', p_role: 'worker', p_area: 'soweto' })
+    const dup = await anon.rpc('create_account', { ...identity, p_email: 'demo.worker@sidegigs.app', p_password: 'longenough1', p_display_name: 'Dup', p_role: 'worker', p_area: 'soweto' })
     expect(dup.error?.message).toMatch(/already exists/)
+    const badId = await anon.rpc('create_account', { ...identity, p_id_number: '8001015009088', p_email: `journey-${Date.now()}@example.com`, p_password: 'longenough1', p_display_name: 'Journey Test', p_role: 'worker', p_area: 'soweto' })
+    expect(badId.error?.message).toMatch(/checksum/)
   })
 
   it('POST GIG: customer posts with post-quantum-encrypted address; fee is computed by the database', async () => {
@@ -121,12 +124,18 @@ describe('SideGigs P0 journey (live database)', () => {
     expect(plain.address).toBe(address)
   })
 
-  it('LIFECYCLE: only the worker starts / marks done; customer confirms completion', async () => {
-    expect((await customer.c.rpc('start_gig', { p_gig: gigId })).error).toBeTruthy()
-    await ok(worker.c.rpc('start_gig', { p_gig: gigId }))
+  it('LIFECYCLE: the worker starts / marks done with the customer’s on-site codes; customer confirms completion', async () => {
+    const codes = await ok(customer.c.from('gig_handshakes').select('step, code, used_at').eq('gig_id', gigId))
+    const code = (step: string) => codes.find((h) => h.step === step)!.code as string
+    expect(codes).toHaveLength(2)
+    expect(await ok(worker.c.from('gig_handshakes').select('code').eq('gig_id', gigId))).toHaveLength(0) // worker must scan them
+    expect((await customer.c.rpc('start_gig', { p_gig: gigId, p_code: code('start') })).error).toBeTruthy()
+    expect((await worker.c.rpc('start_gig', { p_gig: gigId, p_code: 'ZZZZZZ' })).error?.message).toMatch(/doesn't match/)
+    expect((await worker.c.rpc('start_gig', { p_gig: gigId, p_code: code('finish') })).error).toBeTruthy()
+    await ok(worker.c.rpc('start_gig', { p_gig: gigId, p_code: code('start') }))
     const early = await customer.c.rpc('confirm_completion', { p_gig: gigId })
     expect(early.error?.message).toMatch(/mark the job as done/)
-    await ok(worker.c.rpc('mark_gig_done', { p_gig: gigId }))
+    await ok(worker.c.rpc('mark_gig_done', { p_gig: gigId, p_code: code('finish') }))
     expect((await worker.c.rpc('confirm_completion', { p_gig: gigId })).error).toBeTruthy()
     expect((await customer.c.rpc('cancel_gig', { p_gig: gigId })).error?.message).toMatch(/before work starts/)
     await ok(customer.c.rpc('confirm_completion', { p_gig: gigId }))

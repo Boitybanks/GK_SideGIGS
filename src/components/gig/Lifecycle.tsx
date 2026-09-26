@@ -36,8 +36,8 @@ function describe(e: GigEvent, names: Record<string, string>): string {
     case 'withdrawn': return `${who} withdrew an application`
     case 'matched': return `${who} chose ${e.detail ?? 'a worker'}`
     case 'payment_held': return 'Payment held by SideGigs (simulation)'
-    case 'started': return `${who} started the work`
-    case 'worker_done': return `${who} marked the job as done`
+    case 'started': return `${who} started the work${e.detail === 'qr' ? ' (start QR scanned on site)' : ''}`
+    case 'worker_done': return `${who} marked the job as done${e.detail === 'qr' ? ' (finish QR scanned on site)' : ''}`
     case 'completed': return `${who} confirmed the job is complete`
     case 'payment_released': return 'Payment released to the worker (simulation)'
     case 'portfolio_record': return `Verified record ${e.detail ?? ''} added to the worker’s portfolio`

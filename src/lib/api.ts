@@ -1,6 +1,6 @@
 // All data access in one place. Trust-bearing writes go through RPCs; reads rely on RLS.
 import { supabase, AVATAR_BUCKET, DOCUMENT_BUCKET, EVIDENCE_BUCKET } from './supabase'
-import { gigAad, phoneAad } from './pq/aad'
+import { gigAad, homeAddressAad, identityAad, phoneAad } from './pq/aad'
 import type { SignedCredential } from './pq/credential'
 import type {
   Application,
@@ -19,7 +19,9 @@ import type {
   Transaction,
   WorkerStats,
 } from './types'
-import type { GigInput } from './validation'
+import type { GigInput, SignupInput } from './validation'
+import type { Gender, IdentityInput } from './identity'
+import type { HandshakeStep } from './qr-scan'
 import { validateEvidenceFile, validatePdf } from './validation'
 import { toSquareJpeg } from './image'
 import type { RecoveryLink } from './recovery'
@@ -230,8 +232,20 @@ export const applyToGig = (gigId: string, message: string) => rpc<string>('apply
 export const withdrawApplication = (gigId: string) => rpc<void>('withdraw_application', { p_gig: gigId })
 export const selectWorker = (gigId: string, applicationId: string) =>
   rpc<void>('select_worker', { p_gig: gigId, p_application: applicationId })
-export const startGig = (gigId: string) => rpc<void>('start_gig', { p_gig: gigId })
-export const markGigDone = (gigId: string) => rpc<void>('mark_gig_done', { p_gig: gigId })
+// The worker proves they were on site by scanning (or typing) the customer's one-time start / finish code.
+export const startGig = (gigId: string, code: string) => rpc<void>('start_gig', { p_gig: gigId, p_code: code })
+export const markGigDone = (gigId: string, code: string) => rpc<void>('mark_gig_done', { p_gig: gigId, p_code: code })
+
+export interface Handshake {
+  step: HandshakeStep
+  code: string
+  used_at: string | null
+}
+
+/** Only the gig's customer can read these (RLS); the worker has to scan them on site. */
+export async function fetchHandshakes(gigId: string): Promise<Handshake[]> {
+  return must(await supabase.from('gig_handshakes').select('step, code, used_at').eq('gig_id', gigId))
+}
 export const confirmCompletion = (gigId: string) => rpc<string>('confirm_completion', { p_gig: gigId })
 export const submitReview = (gigId: string, rating: number, comment: string) =>
   rpc<void>('submit_review', { p_gig: gigId, p_rating: rating, p_comment: comment })
@@ -338,6 +352,47 @@ export async function deleteDocument(doc: Pick<ProfileDocument, 'id' | 'storage_
 export async function fetchWorkId(gigId: string): Promise<string | null> {
   const row: { work_id: string } | null = must(await supabase.from('gig_work_ids').select('work_id').eq('gig_id', gigId).maybeSingle())
   return row?.work_id ?? null
+}
+
+// ── Identity (sign-up) ─────────────────────────────────────────────────────
+async function encryptIdentity(userId: string, input: IdentityInput) {
+  const [identity, address] = await Promise.all([
+    encryptForVault({ legal_name: input.legal_name, id_number: input.id_number }, identityAad(userId)),
+    encryptForVault({ address: input.home_address }, homeAddressAad(userId)),
+  ])
+  return { identity, address }
+}
+
+/** The ID number is also sent in the clear over TLS so the database can re-check it; only ciphertext is stored. */
+export async function createAccount(input: SignupInput & IdentityInput) {
+  const id = crypto.randomUUID()
+  const envelopes = await encryptIdentity(id, input)
+  await rpc<string>('create_account', {
+    p_id: id,
+    p_email: input.email,
+    p_password: input.password,
+    p_display_name: input.display_name,
+    p_role: input.role,
+    p_area: input.area_slug,
+    p_id_number: input.id_number,
+    p_gender: input.gender,
+    p_identity_envelope: envelopes.identity,
+    p_address_envelope: envelopes.address,
+  })
+}
+
+export async function saveIdentity(userId: string, input: IdentityInput) {
+  const envelopes = await encryptIdentity(userId, input)
+  await rpc<void>('save_identity', {
+    p_id_number: input.id_number,
+    p_gender: input.gender,
+    p_identity_envelope: envelopes.identity,
+    p_address_envelope: envelopes.address,
+  })
+}
+
+export async function fetchMyIdentity(userId: string): Promise<{ gender: Gender; created_at: string } | null> {
+  return must(await supabase.from('profile_identity').select('gender, created_at').eq('id', userId).maybeSingle())
 }
 
 // ── Password reset ─────────────────────────────────────────────────────────

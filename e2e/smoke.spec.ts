@@ -71,15 +71,32 @@ test('P0 journey on a phone', async ({ page }) => {
   await expect(page.getByText(/Held by SideGigs/)).toBeVisible()
   await shot(page, '06-matched')
 
-  // START / DONE (worker)
+  // JOB QR CODES (customer reads the one-time codes the worker must scan on site)
+  const readCode = async (item: RegExp) => {
+    await page.getByRole('button', { name: /Show a QR code/ }).click()
+    await page.getByRole('button', { name: item }).click()
+    return (await page.locator('p.font-mono').last().textContent())!.trim()
+  }
+  const startCode = await readCode(/Start-job QR code/)
+
+  // START (worker types the start code; on a real phone they would scan it)
   await page.getByRole('button', { name: /Switch to Sipho/ }).click()
   await expect(page).toHaveURL(/\/discover/)
   await page.goto(gigUrl)
   await page.getByRole('button', { name: 'Start job' }).click()
-  await page.getByRole('button', { name: 'Yes, start job' }).click()
+  await page.getByLabel('Or type the 6-character code').fill(startCode)
+  await page.getByRole('dialog').getByRole('button', { name: 'Start job' }).click()
   await expect(page.getByRole('button', { name: 'Mark as done' })).toBeVisible()
+
+  // FINISH (customer shows the finish code, worker types it)
+  await page.getByRole('button', { name: /Switch to Thandi/ }).click()
+  await page.goto(gigUrl)
+  const finishCode = await readCode(/Finish-job QR code/)
+  await page.getByRole('button', { name: /Switch to Sipho/ }).click()
+  await page.goto(gigUrl)
   await page.getByRole('button', { name: 'Mark as done' }).click()
-  await page.getByRole('button', { name: 'Yes, mark as done' }).click()
+  await page.getByLabel('Or type the 6-character code').fill(finishCode)
+  await page.getByRole('dialog').getByRole('button', { name: 'Mark as done' }).click()
   await expect(page.getByText(/Waiting for the customer to confirm/)).toBeVisible()
 
   // COMPLETE + REVIEW (customer)

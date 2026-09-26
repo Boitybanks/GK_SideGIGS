@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, BadgeCheck, CalendarDays, CheckCircle2, MapPin, PlayCircle, Share2 } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, CalendarDays, CheckCircle2, MapPin, ScanLine, Share2 } from 'lucide-react'
 import * as api from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { categoryEmoji, categoryLabel } from '../lib/categories'
@@ -18,6 +18,9 @@ import { LifecycleStepper, Timeline } from '../components/gig/Lifecycle'
 import { PaymentPanel } from '../components/gig/PaymentPanel'
 import { ContactReveal } from '../components/gig/ContactReveal'
 import { WorkIdCard } from '../components/gig/WorkIdCard'
+import { JobQrMenu } from '../components/gig/JobQrMenu'
+import { ScanCodeDialog } from '../components/gig/ScanCodeDialog'
+import type { HandshakeStep } from '../lib/qr-scan'
 import { avatarUrl } from '../lib/supabase'
 import { Applicants } from '../components/gig/Applicants'
 import { ReviewForm } from '../components/gig/ReviewForm'
@@ -74,6 +77,11 @@ export default function GigDetail() {
   const toast = useToast()
   const areaOf = useAreaLookup()
   const [message, setMessage] = useState('')
+  const [scan, setScan] = useState<HandshakeStep | null>(null)
+  // A phone's own camera app opens /gigs/:id?step=start&code=… from the customer's QR code.
+  const [params, setParams] = useSearchParams()
+  const linkStep = params.get('step')
+  const linkCode = params.get('code') ?? ''
   const [applyBusy, setApplyBusy] = useState(false)
 
   const gigQ = useQuery({
@@ -148,6 +156,14 @@ export default function GigDetail() {
     hasReview: Boolean(review),
   })
   const gigArea = areaOf(gig.area_slug)
+  // Opening the customer's QR link on the worker's phone goes straight to the right scan step.
+  const linkedScan: HandshakeStep | null =
+    (linkStep === 'start' && actions.includes('start')) || (linkStep === 'finish' && actions.includes('mark_done')) ? linkStep : null
+  const activeScan = scan ?? linkedScan
+  const closeScan = () => {
+    setScan(null)
+    if (linkStep) setParams({}, { replace: true })
+  }
   const myArea = areaOf(profile?.area_slug)
   const dist = gigArea && myArea && viewer !== 'customer' ? distanceKm(gigArea, myArea) : null
   const names: Record<string, string> = {}
@@ -252,10 +268,25 @@ export default function GigDetail() {
 
         {/* ── Assigned worker ── */}
         {actions.includes('start') && (
-          <ConfirmAction label="Start job" icon={<PlayCircle className="size-5" aria-hidden />} confirmText="Let the customer know you have started the work?" onConfirm={() => run(() => api.startGig(gig.id), 'Job started. Good luck!')} />
+          <Button block size="lg" onClick={() => setScan('start')}><ScanLine className="size-5" aria-hidden /> Start job</Button>
         )}
         {actions.includes('mark_done') && (
-          <ConfirmAction label="Mark as done" icon={<CheckCircle2 className="size-5" aria-hidden />} confirmText="Finished? The customer will be asked to confirm completion." onConfirm={() => run(() => api.markGigDone(gig.id), 'Marked as done. The customer has been asked to confirm.')} />
+          <Button block size="lg" onClick={() => setScan('finish')}><ScanLine className="size-5" aria-hidden /> Mark as done</Button>
+        )}
+        {activeScan && (
+          <ScanCodeDialog
+            step={activeScan}
+            gigId={gig.id}
+            initialCode={scan ? '' : linkCode}
+            onClose={closeScan}
+            onSubmit={async (code) => {
+              if (activeScan === 'start') await api.startGig(gig.id, code)
+              else await api.markGigDone(gig.id, code)
+              closeScan()
+              toast.show(activeScan === 'start' ? 'Job started. Good luck!' : 'Marked as done. The customer has been asked to confirm.')
+              await refresh()
+            }}
+          />
         )}
 
         {/* ── Customer ── */}
@@ -281,6 +312,9 @@ export default function GigDetail() {
             </div>
             <Link to={`/w/${gig.worker.id}`} className="text-sm font-semibold text-brand-700 hover:underline">Portfolio</Link>
           </div>
+        )}
+        {viewer === 'customer' && gig.worker && (gig.status === 'matched' || (gig.status === 'in_progress' && !gig.worker_done_at)) && (
+          <JobQrMenu gig={gig} workerName={gig.worker.display_name.split(' ')[0]} />
         )}
         {actions.includes('confirm_completion') && (
           <ConfirmAction

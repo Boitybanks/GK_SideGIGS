@@ -2,9 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
-import { fetchProfile } from './api'
+import { createAccount, fetchProfile } from './api'
 import type { Profile, Role } from './types'
 import type { SignupInput } from './validation'
+import type { IdentityInput } from './identity'
 
 // Public demo logins (seeded, badged "Demo" everywhere). See supabase/migrations/*_demo_seed.sql.
  
@@ -22,7 +23,7 @@ interface AuthValue {
   loading: boolean
   isDemo: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (input: SignupInput) => Promise<void>
+  signUp: (input: SignupInput & IdentityInput) => Promise<void>
   signInDemo: (role: Role) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -83,15 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const signUp = useCallback(
-    async (input: SignupInput) => {
-      const { error } = await supabase.rpc('create_account', {
-        p_email: input.email,
-        p_password: input.password,
-        p_display_name: input.display_name,
-        p_role: input.role,
-        p_area: input.area_slug,
-      })
-      if (error) throw error
+    async (input: SignupInput & IdentityInput) => {
+      await createAccount(input)
       await signIn(input.email, input.password)
     },
     [signIn],

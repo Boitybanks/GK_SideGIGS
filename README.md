@@ -20,6 +20,8 @@ Built by team **CodeCraft** — Boitumelo, Mthandeki, Musa and Zanele.
 - Workers and customers can add a **profile photo** and upload **PDF documents** (qualifications, ID, other). Documents are never checked by SideGigs; ID documents always stay private.
 - When a customer accepts a worker, both get a private **Work ID** (e.g. `SG-7KQ4-M2XP`) to quote when they call or message each other.
 - **Forgot password** emails a reset link; the new password works on the next sign-in.
+- Jobs **start and finish with a QR code**: the customer shows a one-time start code and later a finish code, and the worker scans each one on site (or types the 6-character code).
+- **Sign-up asks for an SA ID number, the name on the ID, gender (male or female) and home address.** The ID number is format- and checksum-checked (not a Home Affairs check), encrypted in the browser, and limited to one account per ID number. People are told if their gender or profile name doesn’t match their ID.
 - Live impact dashboard: people who earned, income earned, match rate, time to match, ratings, repeat work.
 
 Payments are a clearly labelled **simulation** in this version.
