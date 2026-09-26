@@ -1,0 +1,63 @@
+import { BadgeCheck, EyeOff, Flag, KeyRound, Lock, ShieldCheck, Wallet } from 'lucide-react'
+import { Card, PageHeader } from '../components/ui'
+
+const sections = [
+  {
+    icon: EyeOff,
+    title: 'Only your area is public',
+    body: 'Profiles and gigs show an area (like “Soweto”), never a street address. Distances are between area centres.',
+  },
+  {
+    icon: Lock,
+    title: 'Post-quantum encryption for private details',
+    body: 'Street addresses, access notes and phone numbers are encrypted on your device before they are saved, using X-Wing — ML-KEM-768 (NIST FIPS 203) combined with X25519 — and AES-256-GCM. The database stores only ciphertext, so a leaked database or backup reveals nothing, even to an attacker with a future quantum computer (“harvest now, decrypt later”).',
+  },
+  {
+    icon: KeyRound,
+    title: 'Revealed only to your match — and logged',
+    body: 'Decryption happens in a SideGigs server function that checks, with your own login, that you are the customer or the chosen worker for that gig. Every reveal is written to the gig timeline.',
+  },
+  {
+    icon: BadgeCheck,
+    title: 'Reviews you can trust',
+    body: 'Only the customer of a completed, confirmed gig can leave a review — one per gig. Portfolio records are created by SideGigs at confirmation, never typed in by the worker.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Quantum-resistant proof of work',
+    body: 'Workers can download their history signed with ML-DSA-65 (NIST FIPS 204). Anyone can check it on the Verify page.',
+  },
+  {
+    icon: Wallet,
+    title: 'Payments are simulated in this version',
+    body: 'The hackathon build shows how SideGigs protection will work (held → released or refunded) but moves no real money. It is not a regulated escrow service.',
+  },
+  {
+    icon: Flag,
+    title: 'Report anything',
+    body: 'Every gig and profile has a report button. In an emergency call 10111 (SAPS) or 112 from a cellphone.',
+  },
+]
+
+export default function Trust() {
+  return (
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title="Trust & safety" subtitle="How SideGigs protects workers and customers." />
+      <div className="space-y-3">
+        {sections.map((s) => (
+          <Card key={s.title} className="flex gap-4 p-5">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700"><s.icon className="size-5" aria-hidden /></span>
+            <div>
+              <h2 className="font-bold">{s.title}</h2>
+              <p className="mt-1 text-sm text-ink-soft">{s.body}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
+      <p className="mt-6 text-sm text-muted">
+        What we don’t do yet: identity or background checks. No profile on SideGigs is “ID verified” — “verified” always means a record of a
+        customer-confirmed gig.
+      </p>
+    </div>
+  )
+}

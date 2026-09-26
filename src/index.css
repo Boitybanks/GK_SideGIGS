@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* SideGigs identity: warm, optimistic, South African. Green = growth & trust, gold = opportunity,
+   clay = local warmth. Contrast checked against WCAG AA for text use. */
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-brand-50: #eaf6ef;
+  --color-brand-100: #cfeadb;
+  --color-brand-200: #9fd4b6;
+  --color-brand-500: #16945c;
+  --color-brand-600: #0b7a4b;
+  --color-brand-700: #075f3a;
+  --color-brand-800: #06472c;
+  --color-brand-900: #04331f;
+
+  --color-sun-50: #fff8e6;
+  --color-sun-100: #ffefc2;
+  --color-sun-300: #ffd262;
+  --color-sun-400: #ffb612;
+  --color-sun-600: #b07a00;
+  --color-sun-700: #8a5f00;
+
+  --color-clay-50: #fdefe9;
+  --color-clay-100: #fbd9cc;
+  --color-clay-500: #d9542b;
+  --color-clay-600: #b8431f;
+  --color-clay-700: #93341a;
+
+  --color-ink: #16201b;
+  --color-ink-soft: #3d4943;
+  --color-muted: #5b6761;
+  --color-canvas: #fbf7f0;
+  --color-line: #e6dfd2;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-sun-400);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  h1, h2, h3 {
+    @apply tracking-tight text-ink;
+  }
+}
+
+@layer components {
+  .input {
+    @apply block w-full rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted/70
+      shadow-sm transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-200
+      disabled:cursor-not-allowed disabled:bg-canvas aria-[invalid=true]:border-clay-500;
+  }
+  .card {
+    @apply rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(22,32,27,0.04)];
+  }
+  .chip {
+    @apply inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-sm font-semibold text-ink-soft transition
+      hover:border-brand-200 aria-pressed:border-brand-600 aria-pressed:bg-brand-50 aria-pressed:text-brand-800;
+  }
+  .kasi-pattern {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.14) 1px, transparent 0);
+    background-size: 18px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

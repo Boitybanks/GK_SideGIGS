@@ -1,0 +1,74 @@
+import { useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../lib/auth'
+import { friendlyError } from '../lib/errors'
+import { firstError, loginSchema } from '../lib/validation'
+import { Button, Card, Field } from '../components/ui'
+import { DemoButtons } from '../components/DemoButtons'
+
+function safeNext(next: string | null): string | null {
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : null
+}
+
+export default function Login() {
+  const { signIn, userId, profile } = useAuth()
+  const [params] = useSearchParams()
+  const next = safeNext(params.get('next'))
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  if (userId && profile && !busy) return <Navigate to={next ?? (profile.role === 'customer' ? '/my-gigs' : '/discover')} replace />
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    setFormError('')
+    const parsed = loginSchema.safeParse({ email, password })
+    if (!parsed.success) {
+      setErrors(firstError(parsed.error))
+      return
+    }
+    setErrors({})
+    setBusy(true)
+    try {
+      await signIn(parsed.data.email, parsed.data.password)
+      if (next) navigate(next, { replace: true })
+    } catch (err) {
+      setFormError(friendlyError(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-md">
+      <h1 className="text-3xl font-extrabold">Welcome back</h1>
+      <p className="mt-1 text-muted">Sign in to find work or manage your gigs.</p>
+      <Card className="mt-6 p-5">
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
+          <Field label="Email" htmlFor="email" error={errors.email}>
+            <input id="email" type="email" autoComplete="email" inputMode="email" className="input" value={email}
+              onChange={(e) => setEmail(e.target.value)} aria-invalid={Boolean(errors.email) || undefined} aria-describedby={errors.email ? 'email-error' : undefined} />
+          </Field>
+          <Field label="Password" htmlFor="password" error={errors.password}>
+            <input id="password" type="password" autoComplete="current-password" className="input" value={password}
+              onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(errors.password) || undefined} aria-describedby={errors.password ? 'password-error' : undefined} />
+          </Field>
+          {formError && <p role="alert" className="rounded-lg bg-clay-50 px-3 py-2 text-sm font-medium text-clay-700">{formError}</p>}
+          <Button type="submit" block size="lg" loading={busy}>Sign in</Button>
+        </form>
+        <p className="mt-4 text-center text-sm text-muted">
+          New to SideGigs? <Link to="/signup" className="font-semibold text-brand-700 hover:underline">Create a free account</Link>
+        </p>
+      </Card>
+      <Card className="mt-4 p-5">
+        <p className="text-sm font-bold">Just looking? Use a demo account</p>
+        <p className="mb-3 text-xs text-muted">Sample data, clearly labelled. Switch between customer and worker any time.</p>
+        <DemoButtons compact />
+      </Card>
+    </div>
+  )
+}
