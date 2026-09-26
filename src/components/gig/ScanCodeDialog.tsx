@@ -118,7 +118,8 @@ export function ScanCodeDialog({ step, gigId, initialCode = '', onSubmit, onClos
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-night/70 sm:items-center sm:p-4" role="presentation"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId}
-        className="max-h-[100dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 focus:outline-none sm:rounded-3xl">
+        // pb-24 on phones keeps the submit button clear of the host's floating corner badge.
+        className="max-h-[100dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-24 focus:outline-none sm:rounded-3xl sm:pb-5">
         <div className="flex items-start justify-between gap-3">
           <h2 id={titleId} className="text-lg font-bold">{title}</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="grid size-9 place-items-center rounded-full hover:bg-canvas"><X className="size-5" aria-hidden /></button>
@@ -147,11 +148,9 @@ export function ScanCodeDialog({ step, gigId, initialCode = '', onSubmit, onClos
 
         <form className="mt-4" noValidate onSubmit={(e: FormEvent) => { e.preventDefault(); void submit(code) }}>
           <label htmlFor={inputId} className="text-sm font-semibold">Or type the 6-character code</label>
-          <div className="mt-1.5 flex gap-2">
-            <input id={inputId} className="input font-mono uppercase tracking-[0.25em]" value={code} maxLength={7} autoComplete="off" spellCheck={false}
-              placeholder="K7Q-4MX" onChange={(e) => { setCode(e.target.value); setError('') }} aria-invalid={error ? true : undefined} />
-            <Button type="submit" loading={busy} className="shrink-0">{step === 'start' ? 'Start job' : 'Mark as done'}</Button>
-          </div>
+          <input id={inputId} className="input mt-1.5 font-mono uppercase tracking-[0.25em]" value={code} maxLength={7} autoComplete="off" spellCheck={false}
+            placeholder="K7Q-4MX" onChange={(e) => { setCode(e.target.value); setError('') }} aria-invalid={error ? true : undefined} />
+          <Button type="submit" block size="lg" loading={busy} className="mt-3">{step === 'start' ? 'Start job' : 'Mark as done'}</Button>
         </form>
         {error && <p role="alert" className="mt-3 rounded-lg bg-clay-50 px-3 py-2 text-sm font-medium text-clay-700">{error}</p>}
       </div>
