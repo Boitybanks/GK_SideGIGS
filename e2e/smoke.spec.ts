@@ -75,7 +75,7 @@ test('P0 journey on a phone', async ({ page }) => {
   const readCode = async (item: RegExp) => {
     await page.getByRole('button', { name: /Show a QR code/ }).click()
     await page.getByRole('button', { name: item }).click()
-    return (await page.locator('p.font-mono').last().textContent())!.trim()
+    return (await page.getByLabel(/^Code /).textContent())!.trim()
   }
   const startCode = await readCode(/Start-job QR code/)
 
@@ -90,9 +90,11 @@ test('P0 journey on a phone', async ({ page }) => {
 
   // FINISH (customer shows the finish code, worker types it)
   await page.getByRole('button', { name: /Switch to Thandi/ }).click()
+  await expect(page).toHaveURL(/\/my-gigs/)
   await page.goto(gigUrl)
   const finishCode = await readCode(/Finish-job QR code/)
   await page.getByRole('button', { name: /Switch to Sipho/ }).click()
+  await expect(page).toHaveURL(/\/discover/)
   await page.goto(gigUrl)
   await page.getByRole('button', { name: 'Mark as done' }).click()
   await page.getByLabel('Or type the 6-character code').fill(finishCode)
