@@ -3,7 +3,7 @@
 | # | Decision / assumption | Why |
 |---|---|---|
 | A1 | Marketplace model: **workers apply, customer selects** (not first-come auto-accept). | Customer trust requires reviewing the worker's portfolio before hiring; this also makes the portfolio load-bearing. |
-| A2 | Fee = 15% of payout, **added to the customer**, computed in the database (generated column), rounded to the cent. | Brief default; clients cannot tamper with the fee. |
+| A2 | Fee = 15% **admin fee deducted from the worker's pay** (changed 26 Sep 2026 by the team; the brief originally added it to the customer). The customer pays the agreed job price; the worker receives 85%. Computed in the database (generated columns), rounded half-up to the cent. | Team decision; clients cannot tamper with the fee. |
 | A3 | Payments are a **clearly labelled simulation** ("held" → "released"/"refunded"). No real money moves. | Real payment/escrow is regulated and out of hackathon scope. |
 | A4 | Location = curated list of South African areas with approximate centre coordinates; distance shown as "about N km". Exact addresses are **never public**. | No maps API key needed; protects residential privacy. |
 | A5 | Accounts are created through a database function (`create_account`) that creates a confirmed Supabase Auth user, then the client signs in with the password. | New hosted Supabase projects require email confirmation and the default mailer only sends to team members; judges must be able to sign up instantly. The function validates input and hashes passwords with bcrypt (same as Supabase Auth). |

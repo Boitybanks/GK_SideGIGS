@@ -10,7 +10,7 @@ import { formatDay, timeAgo } from '../lib/format'
 import { distanceKm, formatDistance } from '../lib/geo'
 import { allowedActions, nextStepText, TIME_WINDOW_LABEL, viewerOf } from '../lib/gig-rules'
 import { useAreaLookup } from '../lib/hooks'
-import { formatRand } from '../lib/money'
+import { formatRand, workerNetCents } from '../lib/money'
 import { Avatar, Button, ButtonLink, Card, DemoBadge, ErrorState, Spinner, Stars, StatusPill } from '../components/ui'
 import { useToast } from '../components/ui/toast'
 import { FeeBreakdown } from '../components/gig/FeeBreakdown'
@@ -320,7 +320,7 @@ export default function GigDetail() {
           <ConfirmAction
             label="Confirm job is complete"
             icon={<BadgeCheck className="size-5" aria-hidden />}
-            confirmText={`Confirm ${workerFirst} finished the job? The simulated payment of ${formatRand(gig.payout_cents)} is released and a verified record is added to their portfolio.`}
+            confirmText={`Confirm ${workerFirst} finished the job? The simulated payment is released: ${formatRand(workerNetCents(gig.payout_cents))} to ${workerFirst} after the 15% admin fee, and a verified record is added to their portfolio.`}
             onConfirm={() => run(() => api.confirmCompletion(gig.id), `Done! ${workerFirst}’s portfolio just gained a verified record.`)}
           />
         )}

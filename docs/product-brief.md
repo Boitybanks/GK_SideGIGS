@@ -19,7 +19,7 @@ South Africa has capable people but a **discovery, trust and proof-of-experience
 Income today, evidence of employability tomorrow. Every customer-confirmed gig automatically becomes a **verified portfolio record** (rating, review, evidence photos) on a shareable public profile, plus a **cryptographically signed work history** a worker can take anywhere.
 
 ## Primary user journey
-Customer posts gig (category, description, area, date, payout → sees R500 + R75 fee = R575) → worker discovers nearby gig and applies → customer views applicant's portfolio and selects → simulated payment held → worker starts and marks done → customer confirms completion (payment released) → customer rates and reviews → verified record appears on worker's portfolio → worker shares profile / downloads signed record.
+Customer posts gig (category, description, area, date, payout → sees: you pay R500, the worker receives R425 after the 15% admin fee) → worker discovers nearby gig and applies → customer views applicant's portfolio and selects → simulated payment held → worker starts and marks done → customer confirms completion (payment released) → customer rates and reviews → verified record appears on worker's portfolio → worker shares profile / downloads signed record.
 
 ## MVP (hackathon)
 Accounts + profiles (skills, area) · post gig with fee breakdown · discover (distance, category, skill match) · apply / select · lifecycle OPEN → MATCHED → IN_PROGRESS → COMPLETED (+ cancel) · completion confirmation · rating + review · automatic verified portfolio · public shareable profile · work-evidence photo upload · post-quantum-encrypted private contact details · report pathway · simulated payment · impact dashboard · one-tap demo accounts.
@@ -28,7 +28,7 @@ Accounts + profiles (skills, area) · post gig with fee breakdown · discover (d
 Real payments/escrow · ID/background verification · in-app chat · push/SMS notifications · maps/geocoding of addresses · dispute resolution workflow · native apps · multi-language UI.
 
 ## Business model
-Workers join free and earn the full advertised payout. SideGigs adds a **15% service/protection fee** to the customer (R500 → R75 → R575). Future: business subscriptions, promoted gigs, premium verification, talent discovery for employers.
+Workers join free. The customer pays the agreed job price and SideGigs takes a **15% admin fee from the worker's pay** (R500 job → R75 fee → worker receives R425). Future: business subscriptions, promoted gigs, premium verification, talent discovery for employers.
 
 ## Success metrics
 North Star: **number of people who earned money through a SideGigs-completed gig** (and rand value earned). Supporting: gigs posted, match rate, time to match, completion rate, average rating, verified portfolio records, repeat customers, workers with repeat work. Shown live at `/impact`.

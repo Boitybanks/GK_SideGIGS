@@ -5,7 +5,7 @@ import { fetchAssignedGigs, fetchMyApplications, fetchWorkerStats } from '../lib
 import { useAuth } from '../lib/auth'
 import { categoryEmoji } from '../lib/categories'
 import { formatDay, timeAgo } from '../lib/format'
-import { formatRand } from '../lib/money'
+import { formatRand, workerNetCents } from '../lib/money'
 import type { Gig } from '../lib/types'
 import { ButtonLink, Card, EmptyState, ErrorState, PageHeader, Skeleton, StatusPill } from '../components/ui'
 
@@ -18,7 +18,7 @@ function GigRow({ gig, note }: { gig: Gig; note?: string }) {
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
           <StatusPill status={gig.status} />
           <span>{formatDay(gig.scheduled_date)}</span>
-          <span className="font-semibold text-brand-700">· you earn {formatRand(gig.payout_cents)}</span>
+          <span className="font-semibold text-brand-700">· you receive {formatRand(workerNetCents(gig.payout_cents))}</span>
           {note && <span>· {note}</span>}
         </div>
       </div>

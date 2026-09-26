@@ -35,7 +35,7 @@ export default function Discover() {
 
   return (
     <div>
-      <div className="discover-banner"><div><span className="eyebrow">MAKE ROOM FOR YOUR NEXT OPPORTUNITY</span><h1>Good work. Close to home.</h1><p>Choose a gig that fits your skills and your day. See the full payout before you apply.</p>{!userId && <ButtonLink className="mt-5" to="/signup?role=worker" size="sm">Create your free worker profile</ButtonLink>}</div><img src="/images/craftsperson.webp" alt="Illustrative craftsperson working on a chair" width="145" height="130" /></div>
+      <div className="discover-banner"><div><span className="eyebrow">MAKE ROOM FOR YOUR NEXT OPPORTUNITY</span><h1>Good work. Close to home.</h1><p>Choose a gig that fits your skills and your day. See exactly what you’ll receive before you apply.</p>{!userId && <ButtonLink className="mt-5" to="/signup?role=worker" size="sm">Create your free worker profile</ButtonLink>}</div><img src="/images/craftsperson.webp" alt="Illustrative craftsperson working on a chair" width="145" height="130" /></div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold tracking-tight">Find work near you</h2><p className="text-xs text-muted">{area ? `Closest to ${areaOf(area)?.name ?? 'your area'} first` : 'Choose an area to sort by distance'}</p></div>
 
       <div className="mb-6 space-y-4 rounded-xl border border-line bg-white p-4">

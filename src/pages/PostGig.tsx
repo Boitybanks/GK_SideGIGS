@@ -127,7 +127,7 @@ export default function PostGig() {
 
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">3. Set a clear budget</h2>
-          <Field label="What will the worker earn?" htmlFor="payout" error={errors.payout_cents} hint="Between R50 and R50 000. The worker receives this full amount.">
+          <Field label="What will you pay for this job?" htmlFor="payout" error={errors.payout_cents} hint="Between R50 and R50 000. SideGigs’ 15% admin fee comes out of the worker’s share, not on top.">
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center font-bold text-muted">R</span>
               <input id="payout" type="number" inputMode="decimal" min={50} max={50000} step={0.01} className="input pl-8 text-lg font-bold"
@@ -142,7 +142,7 @@ export default function PostGig() {
             ))}
           </div>
           <FeeBreakdown payoutCents={payoutCents > 0 ? payoutCents : 0} perspective="customer" />
-          <SimulationNote>You won’t be charged. When you choose a worker, SideGigs simulates holding the total until you confirm the job is done.</SimulationNote>
+          <SimulationNote>You won’t be charged. When you choose a worker, SideGigs simulates holding the job price until you confirm the job is done.</SimulationNote>
         </Card>
 
         <Card className="space-y-4 p-5">

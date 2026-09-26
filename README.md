@@ -10,7 +10,7 @@ Built by team **CodeCraft** — Boitumelo, Mthandeki, Musa and Zanele.
   `demo.customer@sidegigs.app` / `demo.worker@sidegigs.app`, password `SideGigsDemo2026`. Demo data is labelled everywhere.
 
 ## What it does
-- Customers post a local gig (category, description, area, date, payout) and see the fee: **R500 + R75 protection fee = R575**. Workers always earn the full R500.
+- Customers post a local gig (category, description, area, date, price) and see the breakdown: **the customer pays R500; SideGigs’ 15% admin fee (R75) comes out of the worker’s pay, so the worker receives R425**.
 - Workers discover nearby gigs (sorted by distance, filter by skill), apply, get chosen, start and finish the job.
 - The customer confirms completion → a **verified record** is added to the worker’s public portfolio automatically, then the customer’s rating and review attach to it.
 - Workers share their portfolio link or download a **quantum-resistant signed work record** (ML-DSA-65) that anyone can verify at `/verify`.

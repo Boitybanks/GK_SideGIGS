@@ -62,7 +62,7 @@ export function gigSchema(today = todayInSA()) {
       .refine((d) => d <= addDays(today, 180), 'Choose a date within the next 6 months.'),
     time_window: z.enum(['morning', 'afternoon', 'evening', 'flexible']),
     payout_cents: z
-      .number({ message: 'Enter what the worker will earn.' })
+      .number({ message: 'Enter what you will pay for the job.' })
       .int()
       .min(MIN_PAYOUT_CENTS, 'The minimum payout is R50.')
       .max(MAX_PAYOUT_CENTS, 'The maximum payout is R50 000.'),

@@ -16,7 +16,8 @@ Netlify hosting + Functions (`netlify/functions`, site `sidegigs-codecraft`).
 ## Rules that matter
 - Trust-bearing writes (gigs status, applications, reviews, portfolio, transactions, events) go ONLY through
   `security definer` RPCs in `supabase/migrations/*_rpc_functions.sql`. Never add direct table write grants for them.
-- Fee = 15% added to the customer, computed by the `gigs.fee_cents` generated column; `src/lib/money.ts` only mirrors it.
+- Fee = 15% admin fee deducted from the worker's pay: the customer pays the job price (`gigs.total_cents` = `payout_cents`),
+  the worker receives `gigs.worker_net_cents`; all generated columns. `src/lib/money.ts` only mirrors them.
 - Portfolio records are created only by `confirm_completion`. "Verified" means customer-confirmed, never ID-verified.
 - Addresses/phones are X-Wing (ML-KEM-768+X25519) → AES-256-GCM envelopes encrypted in the browser; decrypted only in
   `netlify/functions/reveal-contact.mts` using the caller's JWT so RLS decides access. No service-role key anywhere.

@@ -81,7 +81,7 @@ describe('SideGigs P0 journey (live database)', () => {
     }))
     expect(id).toBe(gigId)
     const gig = await ok(customer.c.from('gigs').select('*').eq('id', gigId).single())
-    expect(gig).toMatchObject({ status: 'open', payout_cents: 50000, fee_cents: 7500, total_cents: 57500, is_demo: true })
+    expect(gig).toMatchObject({ status: 'open', payout_cents: 50000, fee_cents: 7500, total_cents: 50000, worker_net_cents: 42500, is_demo: true })
     const stored = await ok(customer.c.from('gig_private').select('envelope').eq('gig_id', gigId).single())
     expect(JSON.stringify(stored)).not.toContain('Vilakazi')
   })
@@ -113,7 +113,7 @@ describe('SideGigs P0 journey (live database)', () => {
     const gig = await ok(customer.c.from('gigs').select('status, assigned_worker_id').eq('id', gigId).single())
     expect(gig).toEqual({ status: 'matched', assigned_worker_id: worker.uid })
     const txn = await ok(worker.c.from('transactions').select('status, mode, total_cents, payout_cents').eq('gig_id', gigId).single())
-    expect(txn).toEqual({ status: 'held', mode: 'simulation', total_cents: 57500, payout_cents: 50000 })
+    expect(txn).toEqual({ status: 'held', mode: 'simulation', total_cents: 50000, payout_cents: 42500 })
   })
 
   it('PRIVACY: the chosen worker can now read the envelope, which decrypts to the real address', async () => {

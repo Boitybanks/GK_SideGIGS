@@ -51,6 +51,7 @@ export interface Gig {
   payout_cents: number
   fee_cents: number
   total_cents: number
+  worker_net_cents: number
   status: GigStatus
   assigned_worker_id: string | null
   is_demo: boolean

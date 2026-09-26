@@ -5,7 +5,7 @@ import { CategoryIcon } from '../CategoryIcon'
 import { formatDay, timeAgo } from '../../lib/format'
 import { formatDistance } from '../../lib/geo'
 import { TIME_WINDOW_LABEL } from '../../lib/gig-rules'
-import { formatRand } from '../../lib/money'
+import { formatRand, workerNetCents } from '../../lib/money'
 import type { DiscoverGig } from '../../lib/types'
 import { DemoBadge } from '../ui'
 
@@ -26,8 +26,8 @@ export function GigCard({ gig, matchesSkills }: { gig: DiscoverGig; matchesSkill
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-lg font-extrabold text-brand-700">{formatRand(gig.payout_cents)}</p>
-          <p className="text-[11px] font-medium text-muted">you earn</p>
+          <p className="text-lg font-extrabold text-brand-700">{formatRand(workerNetCents(gig.payout_cents))}</p>
+          <p className="text-[11px] font-medium text-muted">you receive</p>
         </div>
       </div>
       <p className="line-clamp-2 text-sm text-ink-soft">{gig.description}</p>
