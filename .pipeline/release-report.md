@@ -1,13 +1,27 @@
 # Release report
 
 **PRODUCT:** SideGigs — team CodeCraft (Boitumelo, Mthandeki, Musa, Zanele)
-**STATUS:** APPROVED — production deployment in progress
+**STATUS:** DEPLOYED — public HTTP smoke checks passed; full end-to-end re-test remains outstanding
 **PREVIEW URL:** http://127.0.0.1:5175
 **TARGET PUBLIC URL:** https://sidegigs-codecraft.netlify.app
 
+**APPROVED DESIGN:** https://sidegigs-codecraft.netlify.app/welcome (also accessible while signed in)
+**DEPLOY ID:** `6ab73bcfe0a3866b51ec890c`
+**DEPLOY PERMALINK:** https://6ab73bcfe0a3866b51ec890c--sidegigs-codecraft.netlify.app
+**SOURCE COMMIT:** `e637213` (pushed to GitHub main)
+**PUBLISHED:** 26 September 2026, 03:28:53 UTC / 05:28:53 SAST
+
+## Production verification
+
+Netlify built a clean archive of committed files (no local environment file, dependency folders or caches). Existing backend configuration and keys were retained. Both `reveal-contact` and `work-credential` functions are present. Netlify scanned 139 files and reported no secret matches.
+
+Read-only public smoke passed at 03:30:48 UTC using `node scripts/release-smoke.mjs`: six routes returned HTTP 200 and the approved font configuration; all three new campaign image hashes matched local approved assets; the entry bundle contains the new hero; unauthenticated contact reveal returned 401; an invalid credential request returned 400. CSP headers are present. Nine direct authentication-return-path assertions also passed.
+
+These are HTTP/asset/security-response checks, not a complete browser journey or proof of RLS coverage. In-app browser access was unavailable during post-deployment verification, and the full automated test runner remains blocked by Windows `spawn EPERM`. The complete customer/worker lifecycle was validated on the previous version, but has not been repeated on this release. No real payments are enabled.
+
 ## Current redesign gates — 26 September 2026
 
-Second design iteration: photography, tutoring and beauty replace the trades-led campaign. Eight visible categories cover creative, knowledge, technical and everyday work. DM Sans / Instrument Serif pairing and a three-panel editorial gallery replace the initial split hero. Typecheck, lint and production build passed again. No deployment performed.
+Second design iteration: photography, tutoring and beauty replace the trades-led campaign. Eight visible categories cover creative, knowledge, technical and everyday work. DM Sans / Instrument Serif pairing and a three-panel editorial gallery replace the initial split hero. Typecheck, lint and production build passed again; production deployment is now complete.
 
 - Typecheck: PASS (`npm run typecheck`).
 - Lint: PASS (`npm run lint`).
@@ -15,7 +29,7 @@ Second design iteration: photography, tutoring and beauty replace the trades-led
 - Whitespace/diff check: PASS.
 - Browser review: desktop and 390px phone layout inspected; no horizontal overflow; category link selects Gardening; calculator verifies R1,000 + R150 = R1,150; demo customer login returns to `/gigs/new`; posting form verifies R500 + R75 = R575. No job published during design review.
 - Automated tests: NOT PASSED for this revision. Playwright worker creation blocked by Windows `spawn EPERM`; native-loader Vitest thread run did not finish and was stopped. New navigation tests and local design-review tests are present. Full lifecycle must be rerun before release.
-- Deployment/public smoke test: now authorized by user; Git-connected production deployment is in progress. Historical results below apply to the previous version, not this redesign.
+- Deployment/public smoke test: PASS for production deployment and read-only HTTP smoke as detailed above. Historical full journey results below apply to the previous version, not this redesign.
 
 Changes: editorial green/ivory visual identity, three rotating worker campaign scenes with pause/reduced-motion support, clearer earning/hiring paths, category browsing, accessible form guidance, preserved destinations through authentication, and clearer application/selection messaging. Campaign images are AI-generated illustrations, disclosed in the UI; income is earned through completed work, not passive or guaranteed.
 
