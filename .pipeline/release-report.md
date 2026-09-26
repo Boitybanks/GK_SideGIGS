@@ -1,17 +1,30 @@
 # Release report
 
 **PRODUCT:** SideGigs — team CodeCraft (Boitumelo, Mthandeki, Musa, Zanele)
-**STATUS:** DEPLOYED — public HTTP smoke checks passed; full end-to-end re-test remains outstanding
+**STATUS:** DEPLOYED — optional identity-demo browser flow and public smoke passed. Full customer/worker end-to-end re-test remains outstanding.
 **PREVIEW URL:** http://127.0.0.1:5175
 **TARGET PUBLIC URL:** https://sidegigs-codecraft.netlify.app
 
 **APPROVED DESIGN:** https://sidegigs-codecraft.netlify.app/welcome (also accessible while signed in)
-**DEPLOY ID:** `6ab73bcfe0a3866b51ec890c`
-**DEPLOY PERMALINK:** https://6ab73bcfe0a3866b51ec890c--sidegigs-codecraft.netlify.app
-**SOURCE COMMIT:** `e637213` (pushed to GitHub main)
-**PUBLISHED:** 26 September 2026, 03:28:53 UTC / 05:28:53 SAST
+**DEPLOY ID:** `6ab747096c3922689f5e9575`
+**DEPLOY PERMALINK:** https://6ab747096c3922689f5e9575--sidegigs-codecraft.netlify.app
+**SOURCE COMMIT:** `3096f52` (pushed to GitHub main)
+**PUBLISHED:** 26 September 2026, 04:16:39 UTC / 06:16:39 SAST
 
-## Production verification
+## Current identity-demo release gates — 26 September 2026
+
+- Typecheck, lint, production build and whitespace checks: PASS.
+- Unit tests: PASS, 44 tests across 9 files. Command: `node --experimental-strip-types node_modules/vitest/vitest.mjs run --configLoader native --pool threads --maxWorkers 1 --no-file-parallelism --no-isolate`. An earlier isolated-worker run had startup timeouts; the completed reused-worker run passed all tests.
+- Local browser: sample ID → optional camera step (off until explicit action) → skip selfie → clearly simulated processing → completed with “selfie skipped” → job board: PASS.
+- Camera permissions, missing video-frame handling and stream cleanup have mocked unit coverage. Actual camera hardware capture has not been retested in this release.
+- Targeted local secret-pattern scan found no matches; no environment files or dependency caches included in source archive.
+- Deployment: PASS, Netlify production state `ready`; both existing functions retained. Clean committed-source archive deployed with existing backend environment unchanged.
+- Live HTTP smoke: PASS at 04:17:20 UTC, seven routes, all three approved campaign image hashes, approved hero, honest identity-demo bundle, CSP, same-origin camera/microphone-blocked policy, unauthenticated contact reveal 401 and invalid credential request 400.
+- Live browser: sample → optional selfie skipped → simulated processing → “Demo completed / selfie skipped” → `/discover`: PASS. Reviewed completion at 390px viewport (375px content width including scrollbar); no horizontal overflow. No real personal details entered or camera permission granted during this check.
+
+Optional `/identity-demo` is linked from Profile and Trust. It checks format/checksum locally; full birth date is self-declared to disambiguate the century. This is not proof of issuance, ownership, citizenship or age. It offers a real browser camera only after an explicit click, with a truthful skip path. ID/birth-date inputs are cleared before the camera step; no personal details or image are passed to the parent, stored or uploaded. Completion creates no identity badge, saved record or privilege. A10 and Trust remain explicit that no profile is ID verified. Camera policy allows same-origin browser requests; microphone remains blocked. The existing earning/hiring journey and approved design are preserved.
+
+## Previous design deployment verification (historical)
 
 Netlify built a clean archive of committed files (no local environment file, dependency folders or caches). Existing backend configuration and keys were retained. Both `reveal-contact` and `work-credential` functions are present. Netlify scanned 139 files and reported no secret matches.
 
@@ -19,7 +32,7 @@ Read-only public smoke passed at 03:30:48 UTC using `node scripts/release-smoke.
 
 These are HTTP/asset/security-response checks, not a complete browser journey or proof of RLS coverage. In-app browser access was unavailable during post-deployment verification, and the full automated test runner remains blocked by Windows `spawn EPERM`. The complete customer/worker lifecycle was validated on the previous version, but has not been repeated on this release. No real payments are enabled.
 
-## Current redesign gates — 26 September 2026
+## Previous redesign gates — 26 September 2026 (superseded by current gates above)
 
 Second design iteration: photography, tutoring and beauty replace the trades-led campaign. Eight visible categories cover creative, knowledge, technical and everyday work. DM Sans / Instrument Serif pairing and a three-panel editorial gallery replace the initial split hero. Typecheck, lint and production build passed again; production deployment is now complete.
 
@@ -53,7 +66,7 @@ Revalidated on 26 September 2026: typecheck and lint pass; all 27 unit tests pas
 
 ## Known limitations (real)
 - Payments are a labelled **simulation** — no PSP/escrow integration.
-- No identity/background verification; "verified" = worker marked done + customer confirmed.
+- No identity/background verification; optional identity demo is device-only and grants no badge. "Verified" work history = worker marked done + customer confirmed.
 - Two colluding accounts can still create records for each other (next: account-age weighting, distinct-customer signals, PSP-backed payments).
 - Sign-up throttle is global (30/min), not per IP; no captcha. Supabase "leaked password protection" is a dashboard setting not yet enabled.
 - Report pathway only — no user block list yet. Reports have no admin console (read via database).
@@ -65,7 +78,7 @@ Revalidated on 26 September 2026: typecheck and lint pass; all 27 unit tests pas
 Home page buttons **Try as Thandi** (customer) / **Try as Sipho** (worker), or `demo.customer@sidegigs.app` / `demo.worker@sidegigs.app`, password `SideGigsDemo2026`. All demo data is badged "Demo"; `/impact` can show real users only.
 
 ## Demo script (≤ 8 steps)
-1. Open the URL on a phone → tap **Try as Thandi**.
+1. Open `/identity-demo` → **Use sample details** → **Check ID format** → **Skip selfie** → observe simulation/no-verification notice → continue to job board. Then open `/welcome` → **Try as Thandi**.
 2. **Post a gig**: pick a category, describe it, payout **R500** → see **R75 fee, R575 total**; add a street address (encrypted on-device) → **Publish**.
 3. Tap **Switch to Sipho** → **Find work** shows it at the top ("In your area") → open → **Apply**.
 4. **Switch to Thandi** → open the gig → see Sipho's verified gigs, rating and reviews → **Choose Sipho** (payment held — simulation) → **Decrypt and show** the address.
