@@ -92,8 +92,8 @@ export const serviceSchema = z.object({
   take_home_cents: z
     .number({ message: 'Enter what you want to receive for this service.' })
     .int()
-    .min(MIN_TAKE_HOME_CENTS, 'The minimum you can receive is R46.')
-    .max(MAX_TAKE_HOME_CENTS, 'The maximum you can receive is R46 000.'),
+    .min(MIN_TAKE_HOME_CENTS, 'The minimum you can receive is R45.')
+    .max(MAX_TAKE_HOME_CENTS, 'The maximum you can receive is R45 000.'),
 })
 export type ServiceInput = z.infer<typeof serviceSchema>
 

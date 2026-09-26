@@ -36,7 +36,7 @@ test('P0 journey on a phone', async ({ page }) => {
   await page.getByLabel('Describe the work').fill('The garden gate hinge is broken and the latch sticks. Please bring tools.')
   await page.getByLabel('What will you pay for this job?').fill('500')
   await expect(page.getByLabel('Price breakdown')).toContainText('Nothing is added on top')
-  await expect(page.getByLabel('Price breakdown')).toContainText('R460')
+  await expect(page.getByLabel('Price breakdown')).toContainText('R450')
   await page.getByLabel(/Street address/).fill('7 Smoke Test Lane, Orlando East')
   await shot(page, '03-post-gig')
   await page.getByRole('button', { name: 'Publish gig' }).click()

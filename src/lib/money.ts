@@ -1,17 +1,17 @@
 // Money is always integer cents. The database is the source of truth for pricing (generated columns);
 // this mirror exists so the UI can show each side its own number live while someone types.
-// The client pays the job price, nothing added. SideGigs' 8% fee comes out of the service provider's pay and is the
-// only deduction: no VAT is withheld from providers, who are independent and mostly not VAT-registered (R500 → R460).
+// The client pays the job price, nothing added. SideGigs' 10% fee comes out of the service provider's pay and is the
+// only deduction: no VAT is withheld from providers, who are independent and mostly not VAT-registered (R500 → R450).
 // Whoever posts types their own number: a client posting a gig enters what they pay; a provider listing a service
 // enters what they take home, and the client is shown the price that pays exactly that.
 
-export const FEE_RATE_PERCENT = 8
+export const FEE_RATE_PERCENT = 10
 export const MIN_PAYOUT_CENTS = 5_000 // R50 job price
 export const MAX_PAYOUT_CENTS = 5_000_000 // R50 000 job price
-export const MIN_TAKE_HOME_CENTS = 4_600 // R46 take-home = R50 price
-export const MAX_TAKE_HOME_CENTS = 4_600_000 // R46 000 take-home = R50 000 price
+export const MIN_TAKE_HOME_CENTS = 4_500 // R45 take-home = R50 price
+export const MAX_TAKE_HOME_CENTS = 4_500_000 // R45 000 take-home = R50 000 price
 
-/** Same as private.sidegigs_fee_cents: 8% of the price, rounded half-up to the cent. */
+/** Same as private.sidegigs_fee_cents: 10% of the price, rounded half-up to the cent. */
 export function feeCents(priceCents: number): number {
   return Math.floor((priceCents * FEE_RATE_PERCENT + 50) / 100)
 }
@@ -32,6 +32,17 @@ export function priceForTakeHome(takeHomeCents: number): number {
 export function breakdown(priceCents: number) {
   const fee = feeCents(priceCents)
   return { price: priceCents, fee, workerNet: priceCents - fee }
+}
+
+// ── Wallet cash-outs (same rules as public.request_cashout) ─────────────────
+export type CashoutMethod = 'bank' | 'cash'
+export const CASHOUT_MIN_CENTS = 5_000 // R50
+export const CASH_VOUCHER_MAX_CENTS = 500_000 // R5 000 per voucher and per day
+/** One cash-out a week is free; after that the worker pays what the payout costs SideGigs. */
+export const CASHOUT_FEE_CENTS: Record<CashoutMethod, number> = { bank: 300, cash: 2_000 }
+
+export function cashoutFee(method: CashoutMethod, freeAvailable: boolean): number {
+  return freeAvailable ? 0 : CASHOUT_FEE_CENTS[method]
 }
 
 export function randsToCents(rands: number): number {

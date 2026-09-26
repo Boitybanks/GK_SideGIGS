@@ -122,6 +122,29 @@ export interface DiscoverService {
   distance_km: number | null
 }
 
+/** A payout from My Wallet. Payments are simulated: in production a licensed banking partner sends it. */
+export interface Cashout {
+  id: string
+  method: 'bank' | 'cash'
+  amount_cents: number
+  fee_cents: number
+  destination: string
+  reference: string
+  status: 'processing' | 'paid'
+  created_at: string
+}
+
+/** The provider's wallet: released earnings minus cash-outs. Only the provider can read it. */
+export interface WalletSummary {
+  available_cents: number
+  held_cents: number
+  earned_cents: number
+  cashed_out_cents: number
+  free_cashout_available: boolean
+  cash_today_cents: number
+  cashouts: Cashout[]
+}
+
 export interface Application {
   id: string
   gig_id: string

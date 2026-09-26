@@ -21,7 +21,8 @@ Supabase Postgres. **All state transitions go through `security definer` RPC fun
 | `areas` | SA areas + approx. centre lat/lng | public |
 | `profiles` | public profile: name, mode, area, skills, headline, bio | public |
 | `profile_private` | encrypted phone envelope | owner + matched counterpart |
-| `gigs` | the task; `fee_cents` (8%, from the provider's pay), `total_cents`, `worker_net_cents` are generated columns; `service_id` when booked from a service | open gigs public; else participants/applicants |
+| `gigs` | the task; `fee_cents` (10%, from the provider's pay), `total_cents`, `worker_net_cents` are generated columns; `service_id` when booked from a service | open gigs public; else participants/applicants |
+| `wallet_cashouts` | simulated payouts from My Wallet (bank or cash voucher, fee, reference); written only by `request_cashout` | the provider only |
 | `services` | a provider's priced listing: `take_home_cents` typed by the provider, generated `price_cents` shown to clients | active ones public; owner sees all of theirs |
 | `gig_private` | encrypted exact address + access notes | customer + assigned worker (once matched) |
 | `gig_applications` | worker interest | the worker + gig customer |

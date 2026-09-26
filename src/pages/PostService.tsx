@@ -106,11 +106,11 @@ function ServiceForm({ existing }: { existing?: Service }) {
 
         <Card className="space-y-4 p-5">
           <h2 className="text-lg font-bold">2. Set your price</h2>
-          <Field label="What do you want to receive?" htmlFor="take-home" error={errors.take_home_cents} hint="Between R46 and R46 000 — the amount that reaches you. Clients are shown the price that pays you this after SideGigs’ 8% fee. No VAT is taken.">
+          <Field label="What do you want to receive?" htmlFor="take-home" error={errors.take_home_cents} hint="Between R45 and R45 000 — the amount that reaches you. Clients are shown the price that pays you this after SideGigs’ 10% fee. No VAT is taken.">
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center font-bold text-muted">R</span>
-              <input id="take-home" type="number" inputMode="decimal" min={46} max={46000} step={0.01} className="input pl-8 text-lg font-bold"
-                placeholder="460" value={form.take_home_rands} onChange={(e) => set('take_home_rands', e.target.value)} {...invalid('take_home_cents')} />
+              <input id="take-home" type="number" inputMode="decimal" min={45} max={45000} step={0.01} className="input pl-8 text-lg font-bold"
+                placeholder="450" value={form.take_home_rands} onChange={(e) => set('take_home_rands', e.target.value)} {...invalid('take_home_cents')} />
             </div>
           </Field>
           <div className="flex flex-wrap gap-2">

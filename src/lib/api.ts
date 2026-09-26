@@ -5,6 +5,7 @@ import type { SignedCredential } from './pq/credential'
 import type {
   Application,
   Area,
+  Cashout,
   DiscoverGig,
   DiscoverService,
   DiscoverWorker,
@@ -19,6 +20,7 @@ import type {
   Review,
   Service,
   Transaction,
+  WalletSummary,
   WorkerStats,
 } from './types'
 import type { BookingInput, GigInput, ServiceInput, SignupInput } from './validation'
@@ -297,6 +299,17 @@ export async function bookService(serviceId: string, input: BookingInput): Promi
   })
 }
 export const declineBooking = (gigId: string) => rpc<void>('decline_booking', { p_gig: gigId })
+
+// ── My Wallet (RPCs enforce the balance, weekly free cash-out and cash limits) ──
+export const fetchWallet = () => rpc<WalletSummary>('wallet_summary')
+
+export const requestCashout = (input: { method: 'bank' | 'cash'; amountCents: number; bankName?: string; accountLast4?: string }) =>
+  rpc<Cashout>('request_cashout', {
+    p_method: input.method,
+    p_amount_cents: input.amountCents,
+    p_bank_name: input.method === 'bank' ? input.bankName ?? null : null,
+    p_account_last4: input.method === 'bank' ? input.accountLast4 ?? null : null,
+  })
 
 // ── Lifecycle (RPCs enforce roles and states) ─────────────────────────────
 export const applyToGig = (gigId: string, message: string) => rpc<string>('apply_to_gig', { p_gig: gigId, p_message: message })

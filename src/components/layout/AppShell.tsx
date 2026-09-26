@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Briefcase, Compass, PlusCircle, Store, User, Users, Award, Home, LogIn } from 'lucide-react'
+import { Briefcase, Compass, PlusCircle, Store, User, Users, Home, LogIn, Wallet } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 import { Logo } from './Logo'
@@ -38,7 +38,7 @@ function useNavItems(): NavItem[] {
     { to: '/discover', label: 'Find work', icon: Compass },
     { to: '/my-work', label: 'My work', icon: Briefcase },
     { to: '/my-services', label: 'My services', icon: Store },
-    { to: `/w/${userId}`, label: 'Portfolio', icon: Award },
+    { to: '/wallet', label: 'Wallet', icon: Wallet },
     { to: '/profile', label: 'Profile', icon: User },
   ]
 }

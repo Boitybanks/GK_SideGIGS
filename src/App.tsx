@@ -23,6 +23,7 @@ const Services = lazy(() => import('./pages/Services'))
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
 const PostService = lazy(() => import('./pages/PostService'))
 const MyServices = lazy(() => import('./pages/MyServices'))
+const Wallet = lazy(() => import('./pages/Wallet'))
 const Workers = lazy(() => import('./pages/Workers'))
 const WorkerProfile = lazy(() => import('./pages/WorkerProfile'))
 const Profile = lazy(() => import('./pages/Profile'))
@@ -101,6 +102,7 @@ export default function App() {
                   <Route path="services/:id" element={<ServiceDetail />} />
                   <Route path="services/:id/edit" element={<RequireAuth><PostService /></RequireAuth>} />
                   <Route path="my-services" element={<RequireAuth><MyServices /></RequireAuth>} />
+                  <Route path="wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
                   <Route path="w/:id" element={<WorkerProfile />} />
                   <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
                   <Route path="impact" element={<Impact />} />

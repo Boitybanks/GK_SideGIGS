@@ -10,8 +10,9 @@ Built by team **CodeCraft** — Boitumelo, Mthandeki, Musa and Zanele.
   `demo.customer@sidegigs.app` / `demo.worker@sidegigs.app`, password `SideGigsDemo2026`. Demo data is labelled everywhere.
 
 ## What it does
-- Customers post a local gig (category, description, area, date, price) and **each side sees its own number**: the customer pays R500 with nothing added, and workers are shown **R460, what they receive** after SideGigs’ 8% fee — the only deduction. No VAT is withheld from workers.
-- Workers can also **list a priced service** by the amount they want to take home (R460); clients see and pay R500 and can book it directly, which matches the job at once.
+- Customers post a local gig (category, description, area, date, price) and **each side sees its own number**: the customer pays R500 with nothing added, and workers are shown **R450, what they receive** after SideGigs’ 10% fee — the only deduction. No VAT is withheld from workers.
+- Workers can also **list a priced service** by the amount they want to take home (R450); clients see and pay R500 and can book it directly, which matches the job at once.
+- **My Wallet** shows what a worker has earned and lets them cash out to a bank account or as an SMS cash voucher collected at shops like Boxer, Shoprite and spaza shops — no bank account needed. One cash-out a week is free (payments are simulated).
 - Workers discover nearby gigs (sorted by distance, filter by skill), apply, get chosen, start and finish the job.
 - The customer confirms completion → a **verified record** is added to the worker’s public portfolio automatically, then the customer’s rating and review attach to it.
 - Workers share their portfolio link or download a **quantum-resistant signed work record** (ML-DSA-65) that anyone can verify at `/verify`.

@@ -47,7 +47,7 @@ export default function MyWork() {
         <Card className="p-4">
           <Wallet className="size-5 text-brand-600" aria-hidden />
           <p className="mt-2 text-xl font-extrabold sm:text-2xl">{s?.earned_cents !== undefined && s?.earned_cents !== null ? formatRand(s.earned_cents) : '—'}</p>
-          <p className="text-xs text-muted">earned via SideGigs</p>
+          <Link to="/wallet" className="text-xs font-semibold text-brand-700 underline">earned · open wallet</Link>
         </Card>
         <Card className="p-4">
           <BadgeCheck className="size-5 text-brand-600" aria-hidden />

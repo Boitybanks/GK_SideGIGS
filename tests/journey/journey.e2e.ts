@@ -81,7 +81,7 @@ describe('SideGigs P0 journey (live database)', () => {
     }))
     expect(id).toBe(gigId)
     const gig = await ok(customer.c.from('gigs').select('*').eq('id', gigId).single())
-    expect(gig).toMatchObject({ status: 'open', payout_cents: 50000, fee_cents: 4000, total_cents: 50000, worker_net_cents: 46000, service_id: null, is_demo: true })
+    expect(gig).toMatchObject({ status: 'open', payout_cents: 50000, fee_cents: 5000, total_cents: 50000, worker_net_cents: 45000, service_id: null, is_demo: true })
     const stored = await ok(customer.c.from('gig_private').select('envelope').eq('gig_id', gigId).single())
     expect(JSON.stringify(stored)).not.toContain('Vilakazi')
   })
@@ -113,7 +113,7 @@ describe('SideGigs P0 journey (live database)', () => {
     const gig = await ok(customer.c.from('gigs').select('status, assigned_worker_id').eq('id', gigId).single())
     expect(gig).toEqual({ status: 'matched', assigned_worker_id: worker.uid })
     const txn = await ok(worker.c.from('transactions').select('status, mode, total_cents, fee_cents, payout_cents').eq('gig_id', gigId).single())
-    expect(txn).toEqual({ status: 'held', mode: 'simulation', total_cents: 50000, fee_cents: 4000, payout_cents: 46000 })
+    expect(txn).toEqual({ status: 'held', mode: 'simulation', total_cents: 50000, fee_cents: 5000, payout_cents: 45000 })
   })
 
   it('PRIVACY: the chosen worker can now read the envelope, which decrypts to the real address', async () => {
@@ -191,10 +191,10 @@ describe('SideGigs P0 journey (live database)', () => {
   it('SERVICE: provider prices by take-home; clients see the price that pays it; booking matches at once', async () => {
     const serviceId = await ok(worker.c.rpc('save_service', {
       p_id: null, p_title: 'Journey test: fix a door hinge', p_category: 'repairs',
-      p_description: 'Automated journey test service listing. Hinges and handles.', p_area: 'soweto', p_take_home_cents: 46000,
+      p_description: 'Automated journey test service listing. Hinges and handles.', p_area: 'soweto', p_take_home_cents: 45000,
     }))
     const own = await ok(worker.c.from('services').select('take_home_cents, price_cents, is_demo').eq('id', serviceId).single())
-    expect(own).toEqual({ take_home_cents: 46000, price_cents: 50000, is_demo: true })
+    expect(own).toEqual({ take_home_cents: 45000, price_cents: 50000, is_demo: true })
     const listed = (await ok(anon.rpc('discover_services', { p_worker: worker.uid, p_limit: 50 }))) as Record<string, unknown>[]
     const card = listed.find((s) => s.id === serviceId)
     expect(card?.price_cents).toBe(50000)
@@ -205,9 +205,9 @@ describe('SideGigs P0 journey (live database)', () => {
     const bookedId = await ok(customer.c.rpc('book_service', booking))
     const gig = await ok(customer.c.from('gigs')
       .select('status, assigned_worker_id, service_id, total_cents, fee_cents, worker_net_cents').eq('id', bookedId).single())
-    expect(gig).toEqual({ status: 'matched', assigned_worker_id: worker.uid, service_id: serviceId, total_cents: 50000, fee_cents: 4000, worker_net_cents: 46000 })
+    expect(gig).toEqual({ status: 'matched', assigned_worker_id: worker.uid, service_id: serviceId, total_cents: 50000, fee_cents: 5000, worker_net_cents: 45000 })
     const txn = await ok(worker.c.from('transactions').select('status, total_cents, payout_cents').eq('gig_id', bookedId).single())
-    expect(txn).toEqual({ status: 'held', total_cents: 50000, payout_cents: 46000 })
+    expect(txn).toEqual({ status: 'held', total_cents: 50000, payout_cents: 45000 })
     expect(await ok(customer.c.from('gig_handshakes').select('step').eq('gig_id', bookedId))).toHaveLength(2)
 
     expect((await customer.c.rpc('decline_booking', { p_gig: bookedId })).error).toBeTruthy()
@@ -221,6 +221,23 @@ describe('SideGigs P0 journey (live database)', () => {
     expect((await ok(anon.from('services').select('id').eq('id', serviceId)))).toHaveLength(0)
     expect((await customer.c.rpc('book_service', booking)).error?.message).toMatch(/no longer available/)
     expect((await worker.c.from('services').update({ take_home_cents: 1 }).eq('id', serviceId)).error).toBeTruthy()
+  })
+
+  it('WALLET: released earnings cash out as a shop voucher; one free cash-out a week; only your own', async () => {
+    const before = await ok(worker.c.rpc('wallet_summary'))
+    expect(before.available_cents).toBeGreaterThanOrEqual(45000) // the job confirmed above paid R450
+    const cashout = await ok(worker.c.rpc('request_cashout', { p_method: 'cash', p_amount_cents: 5000, p_bank_name: null, p_account_last4: null }))
+    expect(cashout).toMatchObject({ method: 'cash', amount_cents: 5000, fee_cents: before.free_cashout_available ? 0 : 2000, destination: 'Cash voucher by SMS' })
+    expect(cashout.reference).toMatch(/^CO-[A-HJ-NP-Z2-9]{8}$/)
+    const after = await ok(worker.c.rpc('wallet_summary'))
+    expect(after.available_cents).toBe(before.available_cents - 5000)
+    expect(after.free_cashout_available).toBe(false)
+    const tooMuch = await worker.c.rpc('request_cashout', { p_method: 'bank', p_amount_cents: after.available_cents + 1, p_bank_name: 'Capitec', p_account_last4: '1234' })
+    expect(tooMuch.error?.message).toMatch(/up to the R/)
+    expect((await customer.c.from('wallet_cashouts').select('id').eq('reference', cashout.reference)).data ?? []).toHaveLength(0)
+    expect((await anon.rpc('wallet_summary')).error).toBeTruthy()
+    const forged = await worker.c.from('wallet_cashouts').insert({ worker_id: worker.uid, method: 'cash', amount_cents: 999999, fee_cents: 0, destination: 'x', reference: 'CO-AAAAAAAA' })
+    expect(forged.error).toBeTruthy()
   })
 
   it('CANCEL: an open gig can be cancelled by its customer', async () => {
